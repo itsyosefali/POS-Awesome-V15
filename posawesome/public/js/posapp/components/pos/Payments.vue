@@ -1244,6 +1244,9 @@ export default {
 						return;
 					}
 					if (print) {
+						console.log("==========================================");
+						console.log("ONLINE PRINT: Calling load_print_page() for SERVER print format");
+						console.log("==========================================");
 						vm.load_print_page();
 					}
 					vm.is_cashback = true;
@@ -1345,10 +1348,19 @@ export default {
 				payment.amount = 0;
 			});
 		},
-		// Open print page for invoice
+		// Open print page for invoice - ONLINE ONLY - USES SALES POS FORMAT
 		load_print_page() {
-			const print_format = this.pos_profile.print_format_for_online || this.pos_profile.print_format;
+			console.log("========== LOAD_PRINT_PAGE (ONLINE) ==========");
+			console.log("Using SALES POS print format from server");
+			console.log("Invoice:", this.invoice_doc.name);
+			
+			// ALWAYS use SALES POS format for online printing
+			const print_format = "SALES POS";
 			const letter_head = this.pos_profile.letter_head || 0;
+			
+			console.log("Print format: SALES POS");
+			console.log("Letter head:", letter_head);
+			
 			const url =
 				frappe.urllib.get_base_url() +
 				"/printview?doctype=Sales%20Invoice&name=" +
@@ -1358,18 +1370,23 @@ export default {
 				print_format +
 				"&no_letterhead=" +
 				letter_head;
-			if (this.pos_profile.posa_silent_print) {
-				silentPrint(url);
-			} else {
-				const printWindow = window.open(url, "Print");
-				printWindow.addEventListener(
-					"load",
-					function () {
-						printWindow.print();
-					},
-					{ once: true },
-				);
-			}
+			
+			console.log("Print URL:", url);
+			console.log("Opening print window - will print IMMEDIATELY");
+			console.log("==============================================");
+			
+			// Open print window and print immediately
+			const printWindow = window.open(url, "_blank");
+			
+			// Print immediately when loaded
+			printWindow.addEventListener(
+				"load",
+				function () {
+					console.log("Print window loaded - printing now");
+					printWindow.print();
+				},
+				{ once: true },
+			);
 		},
 		// Print invoice using a more detailed offline template
 		print_offline_invoice(invoice) {

@@ -260,12 +260,35 @@ export default {
 	},
 
 	shortEditQuantityF7(e) {
-		if (e.key === "F7" || e.keyCode === 118 || e.which === 118) {
+		// Check for F7 key more robustly
+		const isF7 = e.key === "F7" || 
+			e.keyCode === 118 || 
+			e.which === 118 ||
+			(e.type === "keydown" && e.code === "F7");
+		
+		if (isF7) {
+			// Don't prevent if user is typing in an input field (unless it's a special case)
+			const activeElement = document.activeElement;
+			const isInputFocused = activeElement && (
+				activeElement.tagName === "INPUT" ||
+				activeElement.tagName === "TEXTAREA" ||
+				activeElement.isContentEditable ||
+				(activeElement.tagName === "DIV" && activeElement.getAttribute("contenteditable") === "true")
+			);
+			
+			// Allow F7 to work even when inputs are focused (for better UX)
+			// But prevent it if user is actively editing in a prompt/dialog
+			if (isInputFocused && activeElement.closest('.frappe-dialog')) {
+				return; // Don't interfere with dialog inputs
+			}
+			
 			e.preventDefault();
 			e.stopPropagation();
+			e.stopImmediatePropagation();
 			
 			// F7: Edit quantity of first item
 			this.editQuantity();
+			return false;
 		}
 	},
 
@@ -595,19 +618,22 @@ export default {
 
 	async printInvoiceByName(invoiceName) {
 		try {
+			const offline = isOffline();
+			console.log("==========================================");
 			console.log("printInvoiceByName called for invoice:", invoiceName);
 			console.log("POS Profile:", this.pos_profile);
 			console.log("posa_silent_print setting:", this.pos_profile.posa_silent_print);
-			console.log("Offline status:", isOffline());
+			console.log("IS OFFLINE:", offline);
+			console.log("==========================================");
 			
-			// Check if we're offline - use SALES POS print format
-			if (isOffline()) {
-				console.log("POS is offline - using SALES POS print format");
+			// Check if we're offline - use offline template
+			if (offline) {
+				console.log("POS is OFFLINE - using offline template");
 				try {
 					// For offline printing, we need to get the invoice data from the current session
 					// Since this is called after submission, we'll use the invoice_doc if available
 					if (this.invoice_doc && this.invoice_doc.name === invoiceName) {
-						console.log("Using current invoice_doc for offline printing with SALES POS format");
+						console.log("Using current invoice_doc for offline printing");
 						this.printOfflineInvoiceWithSalesPOSFormat(this.invoice_doc);
 					} else {
 						console.log("Invoice doc not available, showing offline message");
@@ -627,8 +653,10 @@ export default {
 				}
 			}
 			
-			// Online printing - use standard print format
-			const print_format = this.pos_profile.print_format_for_online || this.pos_profile.print_format;
+			// ========== ONLINE PRINTING - USE SALES POS FORMAT ==========
+			console.log("POS is ONLINE - using SALES POS print format from server");
+			// ALWAYS use SALES POS format for online printing
+			const print_format = "SALES POS";
 			const letter_head = this.pos_profile.letter_head || 0;
 			const url =
 				frappe.urllib.get_base_url() +
@@ -641,43 +669,20 @@ export default {
 				letter_head;
 
 			console.log("Print URL:", url);
-
-			// For F4 shortcut, always try to use silent printing for better cashier experience
-			// This allows cashiers to handle more customers without waiting for print dialogs
-			console.log("Attempting to use silent printing for F4 shortcut...");
+			console.log("Opening print window - will print IMMEDIATELY");
 			
-			// Use the same working implementation as in invoiceOfferMethods.js
-			if (this.pos_profile.posa_silent_print) {
-				console.log("Using silent printing (posa_silent_print enabled)");
-				try {
-					// Use the imported silentPrint function directly
-					console.log("Calling silentPrint function...");
-					silentPrint(url);
-					console.log("silentPrint called successfully for F4 shortcut");
-				} catch (printError) {
-					console.warn("silentPrint failed, falling back to regular printing:", printError);
-					// Fallback to regular printing if silentPrint fails
-					const printWindow = window.open(url, "Print");
-					printWindow.addEventListener(
-						"load",
-						function () {
-							printWindow.print();
-						},
-						{ once: true },
-					);
-				}
-			} else {
-				console.log("Using regular printing (posa_silent_print disabled)");
-				console.log("Note: Enable posa_silent_print in POS Profile for better cashier experience");
-				const printWindow = window.open(url, "Print");
-				printWindow.addEventListener(
-					"load",
-					function () {
-						printWindow.print();
-					},
-					{ once: true },
-				);
-			}
+			// Open print window and print immediately
+			const printWindow = window.open(url, "_blank");
+			
+			// Print immediately when loaded
+			printWindow.addEventListener(
+				"load",
+				function () {
+					console.log("Print window loaded - printing now");
+					printWindow.print();
+				},
+				{ once: true },
+			);
 
 			this.eventBus.emit("show_message", {
 				title: __("Printing invoice"),
@@ -1470,11 +1475,20 @@ export default {
 		if (this.items && this.items.length > 0) {
 			const firstItem = this.items[0];
 			
-			frappe.prompt(__("Enter new quantity for {0}", [firstItem.item_name || firstItem.item_code]), 
-				({ value }) => {
-					const newQty = parseFloat(value);
+			// Use frappe.prompt with proper field definition
+			frappe.prompt(
+				[
+					{
+						label: __("Enter new quantity for {0}", [firstItem.item_name || firstItem.item_code]),
+						fieldname: 'qty',
+						fieldtype: 'Float',
+						default: firstItem.qty || 1,
+						reqd: 1
+					}
+				],
+				(values) => {
+					const newQty = parseFloat(values.qty);
 					if (!isNaN(newQty) && newQty > 0) {
-
 						firstItem.qty = newQty;
 						firstItem.amount = (firstItem.rate || 0) * newQty;
 						firstItem.base_amount = firstItem.amount;
@@ -1497,8 +1511,7 @@ export default {
 					}
 				},
 				__("Update Quantity"),
-				__("Cancel"),
-				firstItem.qty || 1
+				__("Update")
 			);
 		} else {
 			this.eventBus.emit("show_message", {

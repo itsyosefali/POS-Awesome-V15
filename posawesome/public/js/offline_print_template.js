@@ -8,6 +8,16 @@ export default function generateOfflineInvoiceHTML(invoice, posProfile = null, c
 		}, 0);
 		console.log('Calculated paid_amount from payments:', invoice.paid_amount);
 	}
+	
+	// Calculate change_amount if paid_amount > grand_total and not already set
+	if (!invoice.change_amount && invoice.paid_amount && invoice.grand_total) {
+		const paid = parseFloat(invoice.paid_amount) || 0;
+		const grand = parseFloat(invoice.grand_total) || 0;
+		if (paid > grand) {
+			invoice.change_amount = paid - grand;
+			console.log('Calculated change_amount:', invoice.change_amount);
+		}
+	}
 
 	const companyName = posProfile?.company || invoice.company || "YESH FRESH";
 	const posNumber = posProfile?.name || invoice.pos_profile || "POS";
@@ -218,6 +228,16 @@ function generatePOSPrintFormat(invoice, posProfile) {
 			return total + (parseFloat(payment.amount) || 0);
 		}, 0);
 		console.log('POS Print - Calculated paid_amount from payments:', invoice.paid_amount);
+	}
+	
+	// Calculate change_amount if paid_amount > grand_total and not already set
+	if (!invoice.change_amount && invoice.paid_amount && invoice.grand_total) {
+		const paid = parseFloat(invoice.paid_amount) || 0;
+		const grand = parseFloat(invoice.grand_total) || 0;
+		if (paid > grand) {
+			invoice.change_amount = paid - grand;
+			console.log('POS Print - Calculated change_amount:', invoice.change_amount);
+		}
 	}
 
 	const formatDate = (dateStr) => {

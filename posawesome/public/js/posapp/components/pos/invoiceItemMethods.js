@@ -99,6 +99,10 @@ export default {
 						color: "warning",
 					});
 					item.to_set_serial_no = null;
+					// Emit event to refocus search even when item is not added
+					this.$nextTick(() => {
+						this.eventBus.emit("refocus_item_search");
+					});
 					return;
 				}
 				cur_item.serial_no_selected.push(item.to_set_serial_no);
@@ -132,6 +136,11 @@ export default {
 		) {
 			this.expanded = [new_item.posa_row_id];
 		}
+		
+		// Emit event to refocus search field after item is added
+		this.$nextTick(() => {
+			this.eventBus.emit("refocus_item_search");
+		});
 	},
 
 	// Create a new item object with default and calculated fields

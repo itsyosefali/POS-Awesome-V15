@@ -962,8 +962,12 @@ export default {
 		}
 	},
 	load_print_page(invoice_name) {
-		const print_format = this.pos_profile.print_format_for_online || this.pos_profile.print_format;
+		// ALWAYS use SALES POS format for online printing
+		const print_format = "SALES POS";
 		const letter_head = this.pos_profile.letter_head || 0;
+		
+		console.log("load_print_page: Using SALES POS format");
+		
 		const url =
 			frappe.urllib.get_base_url() +
 			"/printview?doctype=Sales%20Invoice&name=" +
@@ -974,18 +978,20 @@ export default {
 			"&no_letterhead=" +
 			letter_head;
 
-		if (this.pos_profile.posa_silent_print) {
-			silentPrint(url);
-		} else {
-			const printWindow = window.open(url, "Print");
-			printWindow.addEventListener(
-				"load",
-				function () {
-					printWindow.print();
-				},
-				{ once: true },
-			);
-		}
+		console.log("Opening print window - will print IMMEDIATELY");
+		
+		// Open print window and print immediately
+		const printWindow = window.open(url, "_blank");
+		
+		// Print immediately when loaded
+		printWindow.addEventListener(
+			"load",
+			function () {
+				console.log("Print window loaded - printing now");
+				printWindow.print();
+			},
+			{ once: true },
+		);
 	},
 
 	formatDateForBackend(date) {

@@ -2071,6 +2071,15 @@ export default {
 		this.scan_barcoud();
 		// grid layout adjusts automatically with CSS, set items per page based on device size
 		this.adjustItemsPerPage(this.windowWidth, this.windowHeight);
+		
+		// Listen for refocus event after item is added
+		this.eventBus.on("refocus_item_search", () => {
+			this.$nextTick(() => {
+				if (this.$refs.debounce_search) {
+					this.$refs.debounce_search.focus();
+				}
+			});
+		});
 	},
 
 	beforeUnmount() {
@@ -2112,6 +2121,7 @@ export default {
 		this.eventBus.off("update_customer_price_list");
 		this.eventBus.off("update_customer");
 		this.eventBus.off("force_reload_items");
+		this.eventBus.off("refocus_item_search");
 	},
 };
 </script>
