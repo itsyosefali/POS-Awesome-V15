@@ -314,12 +314,6 @@
                 <td class="summary-label">Credit Sales:</td>
                 <td class="summary-value">{{ frappe.utils.fmt_money(credit_sales_total, currency=currency) }}</td>
             </tr>
-            {% if overdue_sales_total > 0 %}
-            <tr class="payment-row">
-                <td class="summary-label">Overdue:</td>
-                <td class="summary-value">{{ frappe.utils.fmt_money(overdue_sales_total, currency=currency) }}</td>
-            </tr>
-            {% endif %}
             {% if returns_total > 0 %}
             <tr class="payment-row">
                 <td class="summary-label" style="color: #d32f2f;">Sales Returns:</td>
