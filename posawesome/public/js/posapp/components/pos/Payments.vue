@@ -110,6 +110,7 @@
 										'Cash payment cannot be less than invoice total when credit sale is off',
 								]"
 								:prefix="currencySymbol(invoice_doc.currency)"
+								:input-props="{ 'data-mode-of-payment': payment.mode_of_payment }"
 								@focus="set_rest_amount(payment.idx)"
 								:readonly="invoice_doc.is_return"
 							></v-text-field>
@@ -1247,7 +1248,15 @@ export default {
 						console.log("==========================================");
 						console.log("ONLINE PRINT: Calling load_print_page() for SERVER print format");
 						console.log("==========================================");
-						vm.load_print_page();
+						const serverInvoiceName =
+							(r.message && (r.message.name || r.message.invoice_name)) || null;
+						const invoiceName = serverInvoiceName || vm.invoice_doc?.name;
+						if (!invoiceName) {
+							console.warn("No invoice name returned from server; skipping print.");
+						} else {
+							vm.invoice_doc.name = invoiceName;
+							vm.load_print_page(invoiceName);
+						}
 					}
 					vm.is_cashback = true;
 					vm.is_credit_return = false;
@@ -1348,44 +1357,27 @@ export default {
 				payment.amount = 0;
 			});
 		},
-		// Open print page for invoice - ONLINE ONLY - USES SALES POS FORMAT
-		load_print_page() {
-			console.log("========== LOAD_PRINT_PAGE (ONLINE) ==========");
-			console.log("Using SALES POS print format from server");
-			console.log("Invoice:", this.invoice_doc.name);
-			
-			// ALWAYS use SALES POS format for online printing
+		// Open print page for invoice - optimised for faster printing
+		async load_print_page(invoiceName) {
+			const targetInvoiceName = invoiceName || this.invoice_doc?.name;
+			if (!targetInvoiceName) return;
 			const print_format = "SALES POS";
-			const letter_head = this.pos_profile.letter_head || 0;
-			
-			console.log("Print format: SALES POS");
-			console.log("Letter head:", letter_head);
-			
-			const url =
-				frappe.urllib.get_base_url() +
-				"/printview?doctype=Sales%20Invoice&name=" +
-				this.invoice_doc.name +
-				"&trigger_print=1" +
-				"&format=" +
-				print_format +
-				"&no_letterhead=" +
-				letter_head;
-			
-			console.log("Print URL:", url);
-			console.log("Opening print window - will print IMMEDIATELY");
-			console.log("==============================================");
-			
-			// Open print window and print immediately
-			const printWindow = window.open(url, "_blank");
-			
-			// Print immediately when loaded
-			printWindow.addEventListener(
-				"load",
-				function () {
-					console.log("Print window loaded - printing now");
-					printWindow.print();
+			const no_letterhead = this.pos_profile?.letter_head ? 0 : 1;
+			const printOptions = {
+				invoiceDoc: { ...(this.invoice_doc || {}), name: targetInvoiceName },
+				allowOfflineFallback: true,
+				fallbackDelay: 4000,
+			};
+
+			// Always use silent print - no separate print preview window
+			silentPrint(
+				{
+					doctype: "Sales Invoice",
+					name: targetInvoiceName,
+					print_format,
+					no_letterhead,
 				},
-				{ once: true },
+				printOptions,
 			);
 		},
 		// Print invoice using a more detailed offline template
@@ -1889,12 +1881,21 @@ export default {
 				// Focus on cash payment field after a short delay
 				setTimeout(() => {
 					this.focusCashPaymentField();
-				}, 300);
+				}, 120);
 				
 				if (invoice_doc.customer) {
 					this.get_addresses();
 				}
 				this.get_sales_person_names();
+			});
+			this.eventBus.on("show_payment", (visible) => {
+				if (visible === "true") {
+					this.$nextTick(() => {
+						setTimeout(() => {
+							this.focusCashPaymentField();
+						}, 50);
+					});
+				}
 			});
 			this.eventBus.on("register_pos_profile", (data) => {
 				this.pos_profile = data.pos_profile;
@@ -1988,27 +1989,32 @@ export default {
 		this.eventBus.off("register_pos_settings");
 		this.eventBus.off("register_invoice");
 		this.eventBus.off("register_customer_info");
+		this.eventBus.off("show_payment");
 	},
 	
 	/**
 	 * Focus on the cash payment field when payment page opens
 	 */
-	focusCashPaymentField() {
+	focusCashPaymentField(attempt = 0) {
 		try {
 			// Find the cash payment field by looking for input with cash payment mode
 			const cashPaymentInput = document.querySelector('input[data-mode-of-payment*="cash" i], input[data-mode-of-payment*="Cash" i]');
 			if (cashPaymentInput) {
 				cashPaymentInput.focus();
 				cashPaymentInput.select();
-				console.log("Focused on cash payment field");
-			} else {
-				// Fallback: focus on the first payment input field
-				const firstPaymentInput = document.querySelector('.payments input[type="text"]');
-				if (firstPaymentInput) {
-					firstPaymentInput.focus();
-					firstPaymentInput.select();
-					console.log("Focused on first payment field as fallback");
-				}
+				return;
+			}
+
+			// Fallback: focus on the first payment input field
+			const firstPaymentInput = document.querySelector('.payments input[type="text"]');
+			if (firstPaymentInput) {
+				firstPaymentInput.focus();
+				firstPaymentInput.select();
+				return;
+			}
+
+			if (attempt < 8) {
+				setTimeout(() => this.focusCashPaymentField(attempt + 1), 80);
 			}
 		} catch (error) {
 			console.warn("Could not focus on cash payment field:", error);
