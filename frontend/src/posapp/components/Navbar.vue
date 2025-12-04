@@ -202,6 +202,7 @@ export default {
 		items: [
 			{ text: "POS", icon: "mdi-network-pos" },
 			{ text: "Payments", icon: "mdi-credit-card" },
+			{ text: "Sales Invoice", icon: "mdi-file-document-multiple" },
 			{ text: "Stock Entry", icon: "mdi-package-variant" },
 			{ text: "Item", icon: "mdi-tag" },
 		],

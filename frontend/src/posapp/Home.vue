@@ -43,6 +43,7 @@
 import Navbar from "./components/Navbar.vue";
 import POS from "./components/pos/Pos.vue";
 import Payments from "./components/payments/Pay.vue";
+import SalesInvoice from "./components/invoice/SalesInvoiceList.vue";
 import StockEntry from "./components/stock/MiniStockEntry.vue";
 import Item from "./components/item/MiniItem.vue";
 import AppLoadingOverlay from "./components/ui/LoadingOverlay.vue";
@@ -152,6 +153,7 @@ export default {
 		Navbar,
 		POS,
 		Payments,
+		"Sales Invoice": SalesInvoice,
 		"Stock Entry": StockEntry,
 		Item,
 		AppLoadingOverlay,
