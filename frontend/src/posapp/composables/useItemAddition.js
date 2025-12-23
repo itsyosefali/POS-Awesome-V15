@@ -67,44 +67,44 @@ export function useItemAddition() {
 		parent.bundle_id = context.makeid ? context.makeid(10) : Math.random().toString(36).substr(2, 10);
 		// Force reactivity so the bundle badge appears immediately
 		context.items = [...context.items];
-                for (const comp of components) {
-                        const isStockItem = comp.is_stock_item ?? 1;
-                        const child = {
-                                parent_item: parent.item_code,
-                                bundle_id: parent.bundle_id,
-                                item_code: comp.item_code,
-                                item_name: comp.item_name || comp.item_code,
-                                qty: (parent.qty || 1) * comp.qty,
-                                stock_qty: (parent.qty || 1) * comp.qty,
-                                uom: comp.uom,
-                                rate: 0,
-                                child_qty_per_bundle: comp.qty,
-                                warehouse: context.pos_profile.warehouse,
-                                is_stock_item: isStockItem ? 1 : 0,
-                                has_batch_no: comp.is_batch,
-                                has_serial_no: comp.is_serial,
-                                posa_row_id: context.makeid ? context.makeid(20) : Math.random().toString(36).substr(2, 20),
-                                posa_offers: JSON.stringify([]),
-                                posa_offer_applied: 0,
+		for (const comp of components) {
+			const isStockItem = comp.is_stock_item ?? 1;
+			const child = {
+				parent_item: parent.item_code,
+				bundle_id: parent.bundle_id,
+				item_code: comp.item_code,
+				item_name: comp.item_name || comp.item_code,
+				qty: (parent.qty || 1) * comp.qty,
+				stock_qty: (parent.qty || 1) * comp.qty,
+				uom: comp.uom,
+				rate: 0,
+				child_qty_per_bundle: comp.qty,
+				warehouse: context.pos_profile.warehouse,
+				is_stock_item: isStockItem ? 1 : 0,
+				has_batch_no: comp.is_batch,
+				has_serial_no: comp.is_serial,
+				posa_row_id: context.makeid ? context.makeid(20) : Math.random().toString(36).substr(2, 20),
+				posa_offers: JSON.stringify([]),
+				posa_offer_applied: 0,
 				posa_is_offer: 0,
 			};
 			context.packed_items.push(child);
-                        if (context.update_item_detail) {
-                                scheduleItemTask(
-                                        context,
-                                        child,
-                                        "update_item_detail",
-                                        () => context.update_item_detail(child, false),
-                                        "update_item_detail:bundle_child",
-                                );
-                                context.calc_stock_qty && context.calc_stock_qty(child, child.qty);
-                        }
-                        if (context.fetch_available_qty && isStockItem) {
-                                scheduleItemTask(
-                                        context,
-                                        child,
-                                        "fetch_available_qty",
-                                        () => context.fetch_available_qty(child),
+			if (context.update_item_detail) {
+				scheduleItemTask(
+					context,
+					child,
+					"update_item_detail",
+					() => context.update_item_detail(child, false),
+					"update_item_detail:bundle_child",
+				);
+				context.calc_stock_qty && context.calc_stock_qty(child, child.qty);
+			}
+			if (context.fetch_available_qty && isStockItem) {
+				scheduleItemTask(
+					context,
+					child,
+					"fetch_available_qty",
+					() => context.fetch_available_qty(child),
 					"fetch_available_qty:bundle_child",
 				);
 			}
@@ -122,6 +122,38 @@ export function useItemAddition() {
 
 	// Add item to invoice
 	const addItem = withPerf("pos:add-item", async function addItemMeasured(item, context) {
+		const blockSale = context.pos_profile?.posa_block_sale_beyond_available_qty;
+		const allowNegativeStock =
+			item.allow_negative_stock === 1 ||
+			item.allow_negative_stock === true ||
+			item.allow_negative_stock === "1";
+
+		if (item.is_stock_item && item.actual_qty <= 0 && !allowNegativeStock) {
+			context.eventBus.emit("show_message", {
+				title: __("Item is out of stock"),
+				text: __("Cannot add an item with zero or negative quantity."),
+				color: "error",
+			});
+			return;
+		}
+
+		if (blockSale && !allowNegativeStock) {
+			const existingItem = context.items.find(
+				(i) => i.item_code === item.item_code && i.uom === item.uom,
+			);
+			const currentQty = existingItem ? existingItem.qty : 0;
+			const requestedQty = item.qty || 1;
+			const maxQty = item._base_actual_qty / (item.conversion_factor || 1);
+
+			if (currentQty + requestedQty > maxQty) {
+				context.eventBus.emit("show_message", {
+					title: __("Quantity exceeds available stock"),
+					color: "warning",
+				});
+				return;
+			}
+		}
+
 		if (!item.uom) {
 			item.uom = item.stock_uom;
 		}
@@ -451,6 +483,7 @@ export function useItemAddition() {
 
 		// Initialize flag for tracking manual rate changes
 		new_item._manual_rate_set = false;
+		new_item._manual_rate_set_from_uom = false;
 
 		// Set negative quantity for return invoices
 		if (context.isReturnInvoice && item.qty > 0) {
@@ -491,6 +524,7 @@ export function useItemAddition() {
 		}
 		new_item.actual_batch_qty = "";
 		new_item.batch_no_expiry_date = item.batch_no_expiry_date || null;
+		new_item.batch_no_is_expired = item.batch_no_is_expired || false;
 		new_item.conversion_factor = 1;
 		new_item.posa_offers = JSON.stringify([]);
 		new_item.posa_offer_applied = 0;

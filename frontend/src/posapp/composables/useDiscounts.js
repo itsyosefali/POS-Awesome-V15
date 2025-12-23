@@ -2,48 +2,44 @@
 
 export function useDiscounts() {
 	// Update additional discount amount based on percentage
-        const updateDiscountAmount = (context) => {
-                let value = flt(context.additional_discount_percentage);
-                const usePercentage = Boolean(context.pos_profile?.posa_use_percentage_discount);
-                // If value is too large, reset to 0
-                if (value < -100 || value > 100) {
-                        context.additional_discount_percentage = 0;
-                        context.additional_discount = 0;
-                        return;
-                }
+	const updateDiscountAmount = (context) => {
+		let value = flt(context.additional_discount_percentage);
+		const usePercentage = Boolean(context.pos_profile?.posa_use_percentage_discount);
+		// If value is too large, reset to 0
+		if (value < -100 || value > 100) {
+			context.additional_discount_percentage = 0;
+			context.additional_discount = 0;
+			return;
+		}
 
-                // Calculate discount amount based on percentage
-                if (context.Total && context.Total !== 0) {
-                        if (usePercentage && context.isReturnInvoice && value > 0) {
-                                value = -Math.abs(value);
-                                context.additional_discount_percentage = value;
-                        }
+		// Calculate discount amount based on percentage
+		if (context.Total && context.Total !== 0) {
+			if (usePercentage && context.isReturnInvoice && value > 0) {
+				value = -Math.abs(value);
+				context.additional_discount_percentage = value;
+			}
 
-                        if (usePercentage) {
-                                const baseTotal = context.isReturnInvoice
-                                        ? Math.abs(context.Total)
-                                        : context.Total;
+			if (usePercentage) {
+				const baseTotal = context.isReturnInvoice ? Math.abs(context.Total) : context.Total;
 
-                                const percentMagnitude = Math.abs(value);
-                                let discountAmount = (baseTotal * percentMagnitude) / 100;
+				const percentMagnitude = Math.abs(value);
+				let discountAmount = (baseTotal * percentMagnitude) / 100;
 
-                                if (value < 0 || context.isReturnInvoice) {
-                                        discountAmount = -Math.abs(discountAmount);
-                                } else {
-                                        discountAmount = Math.abs(discountAmount);
-                                }
+				if (value < 0 || context.isReturnInvoice) {
+					discountAmount = -Math.abs(discountAmount);
+				} else {
+					discountAmount = Math.abs(discountAmount);
+				}
 
-                                context.additional_discount = discountAmount;
-                        } else {
-                                const signedTotal = context.isReturnInvoice
-                                        ? -Math.abs(context.Total)
-                                        : context.Total;
-                                context.additional_discount = (signedTotal * value) / 100;
-                        }
-                } else {
-                        context.additional_discount = 0;
-                }
-        };
+				context.additional_discount = discountAmount;
+			} else {
+				const signedTotal = context.isReturnInvoice ? -Math.abs(context.Total) : context.Total;
+				context.additional_discount = (signedTotal * value) / 100;
+			}
+		} else {
+			context.additional_discount = 0;
+		}
+	};
 
 	// Calculate prices and discounts for an item based on field change
 	const calcPrices = (item, value, $event, context) => {
@@ -54,8 +50,9 @@ export function useDiscounts() {
 
 		try {
 			// Flag to track manual rate changes
-			if (fieldId === "rate") {
+			if (["rate", "discount_amount", "discount_percentage"].includes(fieldId)) {
 				item._manual_rate_set = true;
+				item._manual_rate_set_from_uom = false;
 			}
 
 			// Handle negative values
@@ -77,57 +74,49 @@ export function useDiscounts() {
 			// Field-wise calculations
 			switch (fieldId) {
 				case "rate":
-					// Store base rate and convert to selected currency
 					item.base_rate = context.flt(
 						newValue / context.exchange_rate,
 						context.currency_precision,
 					);
 					item.rate = newValue;
 
-					// Calculate discount amount in selected currency
-					item.discount_amount = context.flt(
-						converted_price_list_rate - item.rate,
+					item.base_discount_amount = context.flt(
+						item.base_price_list_rate - item.base_rate,
 						context.currency_precision,
 					);
-					item.base_discount_amount = context.flt(
-						item.price_list_rate - item.base_rate,
+					item.discount_amount = context.flt(
+						item.base_discount_amount * context.exchange_rate,
 						context.currency_precision,
 					);
 
-					// Calculate percentage based on converted values
-					if (converted_price_list_rate) {
+					if (item.base_price_list_rate) {
 						item.discount_percentage = context.flt(
-							(item.discount_amount / converted_price_list_rate) * 100,
+							(item.base_discount_amount / item.base_price_list_rate) * 100,
 							context.float_precision,
 						);
 					}
 					break;
 
 				case "discount_amount":
-					// Ensure discount amount doesn't exceed price list rate
-					newValue = Math.min(newValue, converted_price_list_rate);
-
-					// Store base discount and convert to selected currency
-					item.base_discount_amount = context.flt(
-						newValue / context.exchange_rate,
-						context.currency_precision,
-					);
+					newValue = Math.min(newValue, item.price_list_rate);
 					item.discount_amount = newValue;
 
-					// Update rate based on discount
-					item.rate = context.flt(
-						converted_price_list_rate - item.discount_amount,
+					item.base_discount_amount = context.flt(
+						item.discount_amount / context.exchange_rate,
 						context.currency_precision,
 					);
 					item.base_rate = context.flt(
-						item.price_list_rate - item.base_discount_amount,
+						item.base_price_list_rate - item.base_discount_amount,
+						context.currency_precision,
+					);
+					item.rate = context.flt(
+						item.base_rate * context.exchange_rate,
 						context.currency_precision,
 					);
 
-					// Calculate percentage
-					if (converted_price_list_rate) {
+					if (item.base_price_list_rate) {
 						item.discount_percentage = context.flt(
-							(item.discount_amount / converted_price_list_rate) * 100,
+							(item.base_discount_amount / item.base_price_list_rate) * 100,
 							context.float_precision,
 						);
 					} else {
@@ -136,27 +125,23 @@ export function useDiscounts() {
 					break;
 
 				case "discount_percentage":
-					// Ensure percentage doesn't exceed 100%
 					newValue = Math.min(newValue, 100);
 					item.discount_percentage = context.flt(newValue, context.float_precision);
 
-					// Calculate discount amount in selected currency
-					item.discount_amount = context.flt(
-						(converted_price_list_rate * item.discount_percentage) / 100,
-						context.currency_precision,
-					);
 					item.base_discount_amount = context.flt(
-						(item.price_list_rate * item.discount_percentage) / 100,
+						(item.base_price_list_rate * item.discount_percentage) / 100,
 						context.currency_precision,
 					);
-
-					// Update rates
-					item.rate = context.flt(
-						converted_price_list_rate - item.discount_amount,
+					item.discount_amount = context.flt(
+						item.base_discount_amount * context.exchange_rate,
 						context.currency_precision,
 					);
 					item.base_rate = context.flt(
-						item.price_list_rate - item.base_discount_amount,
+						item.base_price_list_rate - item.base_discount_amount,
+						context.currency_precision,
+					);
+					item.rate = context.flt(
+						item.base_rate * context.exchange_rate,
 						context.currency_precision,
 					);
 					break;

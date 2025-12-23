@@ -40,6 +40,23 @@
 					<v-chip v-if="item.name_overridden" color="primary" size="x-small" class="ml-1">
 						{{ __("Edited") }}
 					</v-chip>
+					<v-chip
+						v-if="item.batch_no_is_expired"
+						color="error"
+						size="x-small"
+						variant="flat"
+						class="ml-1"
+					>
+						{{ __("Expired") }}
+					</v-chip>
+					<v-tooltip v-if="item.pricing_rule_badge" location="bottom">
+						<template #activator="{ props }">
+							<v-chip v-bind="props" color="primary" size="x-small" class="ml-1">
+								{{ item.pricing_rule_badge.label }}
+							</v-chip>
+						</template>
+						<span>{{ item.pricing_rule_badge.tooltip }}</span>
+					</v-tooltip>
 					<v-icon
 						v-if="pos_profile.posa_allow_line_item_name_override && !item.posa_is_replace"
 						size="x-small"
@@ -61,49 +78,143 @@
 			<template v-slot:item.qty="{ item }">
 				<div class="pos-table__qty-counter" :class="{ 'rtl-layout': isRTL }" :title="`RTL: ${isRTL}`">
 					<v-btn
-						:disabled="!!item.posa_is_replace"
+						:disabled="
+							!!item.posa_is_replace ||
+							(isReturnInvoice &&
+								(item.is_free_item || item.posa_is_offer || item.posa_is_replace))
+						"
 						size="small"
 						variant="flat"
 						class="pos-table__qty-btn pos-table__qty-btn--minus minus-btn qty-control-btn"
 						@click.stop="handleMinusClick(item)"
+						:aria-label="__('Decrease quantity')"
 					>
 						<v-icon size="small">mdi-minus</v-icon>
 					</v-btn>
 					<div
+						v-if="editing_qty_row_id !== item.posa_row_id"
 						class="pos-table__qty-display amount-value number-field-rtl"
 						:class="{
-							'negative-number': isNegative(item.qty),
+							'negative-number': memoizedIsNegative(item.qty),
 							'large-number': memoizedQtyLength(item.qty) > 6,
 						}"
 						:data-length="memoizedQtyLength(item.qty)"
-						:title="formatFloat(item.qty, hide_qty_decimals ? 0 : undefined)"
+						:title="memoizedFormatFloat(item.qty, hide_qty_decimals ? 0 : undefined)"
+						@click.stop="openQtyEdit(item)"
 					>
-						{{ formatFloat(item.qty, hide_qty_decimals ? 0 : undefined) }}
+						{{ memoizedFormatFloat(item.qty, hide_qty_decimals ? 0 : undefined) }}
 					</div>
+					<v-text-field
+						v-else
+						:model-value="editing_qty_value"
+						@update:model-value="editing_qty_value = $event"
+						density="compact"
+						variant="outlined"
+						class="pos-table__qty-input"
+						@blur="closeQtyEdit(item)"
+						@keydown.enter.prevent="closeQtyEdit(item)"
+						@click.stop
+						ref="qtyInput"
+						:autofocus="true"
+						type="number"
+						:disabled="
+							isReturnInvoice &&
+							(item.is_free_item || item.posa_is_offer || item.posa_is_replace)
+						"
+					></v-text-field>
 					<v-btn
 						:disabled="
 							!!item.posa_is_replace ||
-							((!stock_settings.allow_negative_stock || blockSaleBeyondAvailableQty) &&
-								item.max_qty !== undefined &&
-								item.qty >= item.max_qty)
+							item.disable_increment ||
+							(isReturnInvoice &&
+								(item.is_free_item || item.posa_is_offer || item.posa_is_replace))
 						"
 						size="small"
 						variant="flat"
 						class="pos-table__qty-btn pos-table__qty-btn--plus plus-btn qty-control-btn"
 						@click.stop="addOne(item)"
+						:aria-label="__('Increase quantity')"
 					>
 						<v-icon size="small">mdi-plus</v-icon>
+					</v-btn>
+				</div>
+			</template>
+			<!-- UOM column -->
+			<template v-slot:item.uom="{ item }">
+				<div class="pos-table__editor-box uom-editor" @click.stop>
+					<v-btn
+						size="x-small"
+						variant="flat"
+						class="pos-table__editor-btn uom-arrow"
+						@click.stop="changeUom(item, -1)"
+						:aria-label="__('Previous unit of measure')"
+						:disabled="!item.item_uoms || item.item_uoms.length <= 1"
+					>
+						<v-icon size="small">mdi-chevron-left</v-icon>
+					</v-btn>
+					<v-select
+						ref="uomSelect"
+						:class="{ 'uom-display-mode': editing_uom_row_id !== item.posa_row_id }"
+						:model-value="item.uom"
+						@update:model-value="handleUomSelect(item, $event)"
+						:items="item.item_uoms"
+						item-title="uom"
+						item-value="uom"
+						density="compact"
+						variant="outlined"
+						class="pos-table__editor-input uom-select"
+						hide-details
+						@focus="openUomEdit(item)"
+						@blur="closeUomEdit(item)"
+					></v-select>
+					<v-btn
+						size="x-small"
+						variant="flat"
+						class="pos-table__editor-btn uom-arrow"
+						@click.stop="changeUom(item, 1)"
+						:aria-label="__('Next unit of measure')"
+						:disabled="!item.item_uoms || item.item_uoms.length <= 1"
+					>
+						<v-icon size="small">mdi-chevron-right</v-icon>
 					</v-btn>
 				</div>
 			</template>
 
 			<!-- Rate column -->
 			<template v-slot:item.rate="{ item }">
-				<div class="currency-display right-aligned">
-					<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
-					<span class="amount-value" :class="{ 'negative-number': isNegative(item.rate) }">
-						{{ formatCurrency(item.rate) }}
-					</span>
+				<div class="pos-table__editor-box">
+					<div
+						v-if="editing_rate_row_id !== item.posa_row_id"
+						class="pos-table__editor-display"
+						@click.stop="openRateEdit(item)"
+					>
+						<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
+						<span
+							class="amount-value"
+							:class="{ 'negative-number': memoizedIsNegative(item.rate) }"
+						>
+							{{ memoizedFormatCurrency(item.rate) }}
+						</span>
+					</div>
+					<v-text-field
+						v-else
+						:model-value="editing_rate_value"
+						@update:model-value="editing_rate_value = $event"
+						density="compact"
+						variant="outlined"
+						class="pos-table__editor-input"
+						@blur="closeRateEdit(item)"
+						@keydown.enter.prevent="closeRateEdit(item)"
+						@click.stop
+						ref="rateInput"
+						:autofocus="true"
+						type="number"
+						:disabled="
+							!pos_profile.posa_allow_user_to_edit_rate ||
+							!!item.posa_is_replace ||
+							!!item.posa_offer_applied
+						"
+					></v-text-field>
 				</div>
 			</template>
 
@@ -113,37 +224,87 @@
 					<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
 					<span
 						class="amount-value"
-						:class="{ 'negative-number': isNegative(item.qty * item.rate) }"
-						>{{ formatCurrency(item.qty * item.rate) }}</span
+						:class="{ 'negative-number': memoizedIsNegative(item.qty * item.rate) }"
+						>{{ memoizedFormatCurrency(item.qty * item.rate) }}</span
 					>
 				</div>
 			</template>
 
 			<!-- Discount percentage column -->
 			<template v-slot:item.discount_value="{ item }">
-				<div class="currency-display right-aligned">
-					<span class="amount-value">
-						{{
-							formatFloat(
-								item.discount_percentage ||
-									(item.price_list_rate
-										? (item.discount_amount / item.price_list_rate) * 100
-										: 0),
-							)
-						}}%
-					</span>
+				<div class="pos-table__editor-box">
+					<div
+						v-if="editing_discount_percent_row_id !== item.posa_row_id"
+						class="pos-table__editor-display"
+						@click.stop="openDiscountPercentEdit(item)"
+					>
+						<span class="amount-value">
+							{{
+								memoizedFormatFloat(
+									Math.abs(
+										item.discount_percentage ||
+											(item.price_list_rate
+												? (item.discount_amount / item.price_list_rate) * 100
+												: 0),
+									),
+								)
+							}}%
+						</span>
+					</div>
+					<v-text-field
+						v-else
+						:model-value="editing_discount_percent_value"
+						@update:model-value="editing_discount_percent_value = $event"
+						density="compact"
+						variant="outlined"
+						class="pos-table__editor-input"
+						@blur="closeDiscountPercentEdit(item)"
+						@keydown.enter.prevent="closeDiscountPercentEdit(item)"
+						@click.stop
+						ref="discountPercentInput"
+						:autofocus="true"
+						type="number"
+						:disabled="
+							!pos_profile.posa_allow_user_to_edit_item_discount ||
+							!!item.posa_is_replace ||
+							!!item.posa_offer_applied
+						"
+					></v-text-field>
 				</div>
 			</template>
 
 			<!-- Discount amount column -->
 			<template v-slot:item.discount_amount="{ item }">
-				<div class="currency-display right-aligned">
-					<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
-					<span
-						class="amount-value"
-						:class="{ 'negative-number': isNegative(item.discount_amount || 0) }"
-						>{{ formatCurrency(item.discount_amount || 0) }}</span
+				<div class="pos-table__editor-box">
+					<div
+						v-if="editing_discount_amount_row_id !== item.posa_row_id"
+						class="pos-table__editor-display"
+						@click.stop="openDiscountAmountEdit(item)"
 					>
+						<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
+						<span class="amount-value">{{
+							memoizedFormatCurrency(Math.abs(item.discount_amount || 0))
+						}}</span>
+					</div>
+					<v-text-field
+						v-else
+						:model-value="editing_discount_amount_value"
+						@update:model-value="editing_discount_amount_value = $event"
+						density="compact"
+						variant="outlined"
+						class="pos-table__editor-input"
+						@blur="closeDiscountAmountEdit(item)"
+						@keydown.enter.prevent="closeDiscountAmountEdit(item)"
+						@click.stop
+						ref="discountAmountInput"
+						:autofocus="true"
+						type="number"
+						:disabled="
+							!pos_profile.posa_allow_user_to_edit_item_discount ||
+							!!item.posa_is_replace ||
+							!!item.posa_offer_applied
+						"
+					></v-text-field>
 				</div>
 			</template>
 
@@ -153,8 +314,8 @@
 					<span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
 					<span
 						class="amount-value"
-						:class="{ 'negative-number': isNegative(item.price_list_rate) }"
-						>{{ formatCurrency(item.price_list_rate) }}</span
+						:class="{ 'negative-number': memoizedIsNegative(item.price_list_rate) }"
+						>{{ memoizedFormatCurrency(item.price_list_rate) }}</span
 					>
 				</div>
 			</template>
@@ -180,6 +341,7 @@
 					variant="flat"
 					class="pos-table__delete-btn delete-action-btn"
 					@click.stop="removeItem(item)"
+					:aria-label="__('Remove item')"
 				>
 					<v-icon size="small">mdi-delete-outline</v-icon>
 				</v-btn>
@@ -224,7 +386,10 @@
 											class="pos-themed-input"
 											hide-details
 											:model-value="
-												formatFloat(item.qty, hide_qty_decimals ? 0 : undefined)
+												memoizedFormatFloat(
+													item.qty,
+													hide_qty_decimals ? 0 : undefined,
+												)
 											"
 											@change="handleQtyChange(item, $event)"
 											:rules="[isNumber]"
@@ -234,8 +399,8 @@
 										<div v-if="item.max_qty !== undefined" class="text-caption mt-1">
 											{{
 												__("In stock: {0}", [
-													formatFloat(
-														item.max_qty,
+													memoizedFormatFloat(
+														item._base_actual_qty,
 														hide_qty_decimals ? 0 : undefined,
 													),
 												])
@@ -280,7 +445,7 @@
 											:label="frappe._('Rate')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatCurrency(item.rate)"
+											:model-value="memoizedFormatCurrency(item.rate)"
 											@change="[
 												setFormatedCurrency(item, 'rate', null, false, $event),
 												calcPrices(item, $event.target.value, $event),
@@ -302,7 +467,9 @@
 											:label="frappe._('Discount %')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatFloat(item.discount_percentage || 0)"
+											:model-value="
+												memoizedFormatFloat(Math.abs(item.discount_percentage || 0))
+											"
 											@change="[
 												setFormatedCurrency(
 													item,
@@ -330,7 +497,9 @@
 											:label="frappe._('Discount Amount')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatCurrency(item.discount_amount || 0)"
+											:model-value="
+												memoizedFormatCurrency(Math.abs(item.discount_amount || 0))
+											"
 											@change="[
 												setFormatedCurrency(
 													item,
@@ -359,7 +528,7 @@
 											:label="frappe._('Price List Rate')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatCurrency(item.price_list_rate ?? 0)"
+											:model-value="memoizedFormatCurrency(item.price_list_rate ?? 0)"
 											:disabled="!pos_profile.posa_allow_price_list_rate_change"
 											prepend-inner-icon="mdi-format-list-numbered"
 											:prefix="currencySymbol(pos_profile.currency)"
@@ -374,7 +543,7 @@
 											:label="frappe._('Total Amount')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatCurrency(item.qty * item.rate)"
+											:model-value="memoizedFormatCurrency(item.qty * item.rate)"
 											disabled
 											prepend-inner-icon="mdi-calculator"
 										></v-text-field>
@@ -412,7 +581,7 @@
 											:label="frappe._('Available QTY')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatFloat(item.actual_qty)"
+											:model-value="memoizedFormatFloat(item._base_actual_qty)"
 											disabled
 											prepend-inner-icon="mdi-package-variant"
 										></v-text-field>
@@ -425,7 +594,7 @@
 											:label="frappe._('Stock QTY')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatFloat(item.stock_qty)"
+											:model-value="memoizedFormatFloat(item.stock_qty)"
 											disabled
 											prepend-inner-icon="mdi-scale-balance"
 										></v-text-field>
@@ -511,7 +680,7 @@
 									<div class="form-field full-width">
 										<v-autocomplete
 											v-model="item.serial_no_selected"
-											:items="item.serial_no_data"
+											:items="getSerialOptions(item)"
 											item-title="serial_no"
 											item-value="serial_no"
 											variant="outlined"
@@ -545,7 +714,7 @@
 											:label="frappe._('Batch No. Available QTY')"
 											class="pos-themed-input"
 											hide-details
-											:model-value="formatFloat(item.actual_batch_qty)"
+											:model-value="memoizedFormatFloat(item.actual_batch_qty)"
 											disabled
 											prepend-inner-icon="mdi-package-variant"
 										></v-text-field>
@@ -582,11 +751,22 @@
 													<v-list-item-title
 														v-html="item.raw.batch_no"
 													></v-list-item-title>
-													<v-list-item-subtitle
-														v-html="
-															`Available QTY  '${item.raw.batch_qty}' - Expiry Date ${item.raw.expiry_date}`
-														"
-													></v-list-item-subtitle>
+													<v-list-item-subtitle class="d-flex align-center">
+														<span
+															v-html="
+																`Available QTY  '${item.raw.available_qty ?? item.raw.batch_qty}' - Expiry Date ${item.raw.expiry_date}`
+															"
+														></span>
+														<v-chip
+															v-if="item.raw.is_expired"
+															color="error"
+															size="x-small"
+															variant="flat"
+															class="ml-2"
+														>
+															{{ __("Expired") }}
+														</v-chip>
+													</v-list-item-subtitle>
 												</v-list-item>
 											</template>
 										</v-autocomplete>
@@ -660,7 +840,6 @@
 import _ from "lodash";
 import QRCode from "qrcode";
 import { logComponentRender } from "../../utils/perf.js";
-import { parseBooleanSetting } from "../../utils/stock.js";
 import { useInvoiceStore } from "../../stores/invoiceStore.js";
 export default {
 	name: "ItemsTable",
@@ -713,12 +892,64 @@ export default {
 			breakpoint: "xl",
 			columnVisibility: new Map(),
 			// Performance optimization caches
-			qtyLengthCache: new Map(),
 			expandedCache: new Map(),
 			lastUpdateTime: 0,
+			editing_qty_row_id: null,
+			editing_qty_value: null,
+			editing_uom_row_id: null,
+			editing_rate_row_id: null,
+			editing_rate_value: null,
+			editing_discount_percent_row_id: null,
+			editing_discount_percent_value: null,
+			editing_discount_amount_row_id: null,
+			editing_discount_amount_value: null,
 		};
 	},
+	created() {
+		// Non-reactive cache for performance
+		this.formatCache = new Map();
+		this.qtyLengthCache = new Map();
+	},
+	watch: {
+		displayCurrency() {
+			if (this.formatCache) this.formatCache.clear();
+		},
+		pos_profile: {
+			handler() {
+				if (this.formatCache) this.formatCache.clear();
+			},
+			deep: true,
+		},
+	},
 	computed: {
+		memoizedFormatFloat() {
+			return (value, precision) => {
+				if (value === null || value === undefined) return "";
+				const key = `f_${value}_${precision ?? "def"}`;
+				if (this.formatCache.has(key)) return this.formatCache.get(key);
+				const result = this.formatFloat(value, precision);
+				this.formatCache.set(key, result);
+				if (this.formatCache.size > 5000) this.formatCache.clear();
+				return result;
+			};
+		},
+		memoizedFormatCurrency() {
+			return (value, precision) => {
+				if (value === null || value === undefined) return "";
+				const key = `c_${value}_${precision ?? "def"}`;
+				if (this.formatCache.has(key)) return this.formatCache.get(key);
+				const result = this.formatCurrency(value, precision);
+				this.formatCache.set(key, result);
+				if (this.formatCache.size > 5000) this.formatCache.clear();
+				return result;
+			};
+		},
+		memoizedIsNegative() {
+			return (value) => {
+				if (typeof value === "number") return value < 0;
+				return this.isNegative(value);
+			};
+		},
 		items() {
 			return this.invoiceStore.items;
 		},
@@ -761,8 +992,7 @@ export default {
 
 		blockSaleBeyondAvailableQty() {
 			if (["Order", "Quotation"].includes(this.invoiceType)) return false;
-			const allowNegative = parseBooleanSetting(this.stock_settings?.allow_negative_stock);
-			return !allowNegative && !!this.pos_profile?.posa_block_sale_beyond_available_qty;
+			return !!this.pos_profile?.posa_block_sale_beyond_available_qty;
 		},
 
 		// Responsive headers based on container size
@@ -905,6 +1135,13 @@ export default {
 		},
 	},
 	methods: {
+		getSerialOptions(item) {
+			if (Array.isArray(item?.filtered_serial_no_data)) {
+				return item.filtered_serial_no_data;
+			}
+			return Array.isArray(item?.serial_no_data) ? item.serial_no_data : [];
+		},
+
 		customItemFilter(value, search, item) {
 			if (search == null) {
 				return true;
@@ -918,6 +1155,12 @@ export default {
 			const terms = normalized.split(/\s+/).filter(Boolean);
 			if (!terms.length) {
 				return true;
+			}
+
+			// PERF: Use pre-computed search index if available to avoid expensive traversal
+			const rawItem = item?.raw ?? item;
+			if (rawItem?._search_index) {
+				return terms.every((term) => rawItem._search_index.includes(term));
 			}
 
 			const haystacks = [];
@@ -945,16 +1188,15 @@ export default {
 			};
 
 			collect(value);
-			const raw = item?.raw ?? item;
-			collect(raw?.item_name);
-			collect(raw?.item_code);
-			collect(raw?.description);
-			collect(raw?.barcode);
-			collect(raw?.serial_no);
-			collect(raw?.batch_no);
-			collect(raw?.uom);
-			collect(raw?.item_barcode);
-			collect(raw?.barcodes);
+			collect(rawItem?.item_name);
+			collect(rawItem?.item_code);
+			collect(rawItem?.description);
+			collect(rawItem?.barcode);
+			collect(rawItem?.serial_no);
+			collect(rawItem?.batch_no);
+			collect(rawItem?.uom);
+			collect(rawItem?.item_barcode);
+			collect(rawItem?.barcodes);
 
 			if (!haystacks.length) {
 				return false;
@@ -989,18 +1231,18 @@ export default {
 
 		calculateColumnWidth(header) {
 			const baseWidths = {
-				item_name: { min: 150, max: 250, ratio: 0.3 },
-				qty: { min: 120, max: 160, ratio: 0.15 },
-				rate: { min: 100, max: 130, ratio: 0.12 },
-				amount: { min: 100, max: 130, ratio: 0.12 },
-				discount_value: { min: 80, max: 110, ratio: 0.1 },
-				discount_amount: { min: 90, max: 120, ratio: 0.11 },
-				price_list_rate: { min: 110, max: 140, ratio: 0.13 },
-				actions: { min: 80, max: 100, ratio: 0.08 },
-				posa_is_offer: { min: 60, max: 80, ratio: 0.06 },
+				item_name: { min: 120, max: 200, ratio: 0.3 },
+				qty: { min: 60, max: 100, ratio: 0.12 },
+				rate: { min: 60, max: 90, ratio: 0.12 },
+				amount: { min: 60, max: 90, ratio: 0.12 },
+				discount_value: { min: 50, max: 70, ratio: 0.1 },
+				discount_amount: { min: 60, max: 80, ratio: 0.11 },
+				price_list_rate: { min: 70, max: 100, ratio: 0.13 },
+				actions: { min: 50, max: 70, ratio: 0.08 },
+				posa_is_offer: { min: 40, max: 60, ratio: 0.06 },
 			};
 
-			const config = baseWidths[header.key] || { min: 80, max: 120, ratio: 0.1 };
+			const config = baseWidths[header.key] || { min: 50, max: 80, ratio: 0.1 };
 			const calculatedWidth = this.containerWidth * config.ratio;
 
 			return Math.max(config.min, Math.min(config.max, calculatedWidth));
@@ -1008,18 +1250,18 @@ export default {
 
 		calculateMinColumnWidth(header) {
 			const minWidths = {
-				item_name: 120,
-				qty: 100,
-				rate: 80,
-				amount: 80,
-				discount_value: 70,
-				discount_amount: 80,
-				price_list_rate: 90,
-				actions: 60,
-				posa_is_offer: 50,
+				item_name: 100,
+				qty: 60,
+				rate: 60,
+				amount: 60,
+				discount_value: 50,
+				discount_amount: 50,
+				price_list_rate: 60,
+				actions: 40,
+				posa_is_offer: 40,
 			};
 
-			return minWidths[header.key] || 60;
+			return minWidths[header.key] || 40;
 		},
 
 		setupResizeObserver() {
@@ -1164,12 +1406,26 @@ export default {
 			}
 		},
 		handleMinusClick(item) {
-			if (item.qty <= 1) {
-				// Remove the item when quantity would become 0 or less
-				this.removeItem(item);
+			if (this.isReturnInvoice) {
+				// In returns, promotional items should be removed entirely, not decremented
+				if (item.is_free_item || item.posa_is_offer || item.posa_is_replace) {
+					this.removeItem(item);
+					return;
+				}
+				// For regular items in returns, increment towards 0
+				if (item.qty < 0) {
+					this.addOne(item);
+				} else {
+					this.removeItem(item);
+				}
 			} else {
-				// Use the existing subtractOne function
-				this.subtractOne(item);
+				if (item.qty <= 1) {
+					// Remove the item when quantity would become 0 or less
+					this.removeItem(item);
+				} else {
+					// Use the existing subtractOne function
+					this.subtractOne(item);
+				}
 			}
 		},
 
@@ -1184,6 +1440,170 @@ export default {
 			this.$emit("update:expanded", mappedValues);
 		},
 
+		openQtyEdit(item) {
+			if (this.editing_qty_row_id !== item.posa_row_id) {
+				this.editing_qty_row_id = item.posa_row_id;
+				this.editing_qty_value = "";
+				this.$nextTick(() => {
+					this.$refs.qtyInput?.focus();
+				});
+			}
+		},
+
+		closeQtyEdit(item) {
+			if (this.editing_qty_row_id === item.posa_row_id) {
+				if (
+					this.editing_qty_value !== "" &&
+					this.editing_qty_value !== null &&
+					this.editing_qty_value !== undefined
+				) {
+					const newQty = parseFloat(this.editing_qty_value);
+					if (!newQty || newQty <= 0) {
+						this.setFormatedQty(item, "qty", null, false, 1);
+					} else {
+						this.setFormatedQty(item, "qty", null, false, newQty);
+					}
+				}
+				this.editing_qty_row_id = null;
+				this.editing_qty_value = null;
+			}
+		},
+		openUomEdit(item) {
+			this.editing_uom_row_id = item.posa_row_id;
+		},
+
+		closeUomEdit() {
+			this.editing_uom_row_id = null;
+		},
+
+		handleUomSelect(item, newUom) {
+			if (newUom && newUom !== item.uom) {
+				this.calcUom(item, newUom);
+			}
+			// Find the correct component instance to blur
+			const uomSelectComponent = this.$refs.uomSelect.find((ref) =>
+				ref.$el.id.includes(item.posa_row_id),
+			);
+			uomSelectComponent?.blur();
+		},
+
+		changeUom(item, direction) {
+			const uoms = item.item_uoms.map((u) => u.uom);
+			const currentIndex = uoms.indexOf(item.uom);
+			let newIndex = currentIndex + direction;
+
+			if (newIndex < 0) {
+				newIndex = uoms.length - 1;
+			} else if (newIndex >= uoms.length) {
+				newIndex = 0;
+			}
+
+			const newUom = uoms[newIndex];
+			if (newUom !== item.uom) {
+				this.calcUom(item, newUom);
+			}
+		},
+		openRateEdit(item) {
+			if (
+				!this.pos_profile.posa_allow_user_to_edit_rate ||
+				item.posa_is_replace ||
+				item.posa_offer_applied
+			) {
+				return;
+			}
+			this.editing_rate_row_id = item.posa_row_id;
+			this.editing_rate_value = "";
+			this.$nextTick(() => {
+				this.$refs.rateInput?.focus();
+			});
+		},
+
+		closeRateEdit(item) {
+			if (this.editing_rate_row_id === item.posa_row_id) {
+				if (
+					this.editing_rate_value !== "" &&
+					this.editing_rate_value !== null &&
+					this.editing_rate_value !== undefined
+				) {
+					const newRate = parseFloat(this.editing_rate_value);
+					if (Number.isFinite(newRate) && newRate !== item.rate) {
+						this.setFormatedCurrency(item, "rate", null, false, { target: { value: newRate } });
+						this.calcPrices(item, newRate, { target: { id: "rate" } });
+					}
+				}
+				this.editing_rate_row_id = null;
+				this.editing_rate_value = null;
+			}
+		},
+		openDiscountPercentEdit(item) {
+			if (
+				!this.pos_profile.posa_allow_user_to_edit_item_discount ||
+				item.posa_is_replace ||
+				item.posa_offer_applied
+			) {
+				return;
+			}
+			this.editing_discount_percent_row_id = item.posa_row_id;
+			this.editing_discount_percent_value = "";
+			this.$nextTick(() => {
+				this.$refs.discountPercentInput?.focus();
+			});
+		},
+
+		closeDiscountPercentEdit(item) {
+			if (this.editing_discount_percent_row_id === item.posa_row_id) {
+				if (
+					this.editing_discount_percent_value !== "" &&
+					this.editing_discount_percent_value !== null &&
+					this.editing_discount_percent_value !== undefined
+				) {
+					const newDiscount = parseFloat(this.editing_discount_percent_value);
+					if (Number.isFinite(newDiscount) && newDiscount !== item.discount_percentage) {
+						this.setFormatedCurrency(item, "discount_percentage", null, false, {
+							target: { value: newDiscount },
+						});
+						this.calcPrices(item, newDiscount, { target: { id: "discount_percentage" } });
+					}
+				}
+				this.editing_discount_percent_row_id = null;
+				this.editing_discount_percent_value = null;
+			}
+		},
+		openDiscountAmountEdit(item) {
+			if (
+				!this.pos_profile.posa_allow_user_to_edit_item_discount ||
+				item.posa_is_replace ||
+				item.posa_offer_applied
+			) {
+				return;
+			}
+			this.editing_discount_amount_row_id = item.posa_row_id;
+			this.editing_discount_amount_value = "";
+			this.$nextTick(() => {
+				this.$refs.discountAmountInput?.focus();
+			});
+		},
+
+		closeDiscountAmountEdit(item) {
+			if (this.editing_discount_amount_row_id === item.posa_row_id) {
+				if (
+					this.editing_discount_amount_value !== "" &&
+					this.editing_discount_amount_value !== null &&
+					this.editing_discount_amount_value !== undefined
+				) {
+					const newDiscount = parseFloat(this.editing_discount_amount_value);
+					if (Number.isFinite(newDiscount) && newDiscount !== item.discount_amount) {
+						this.setFormatedCurrency(item, "discount_amount", null, false, {
+							target: { value: newDiscount },
+						});
+						this.calcPrices(item, newDiscount, { target: { id: "discount_amount" } });
+					}
+				}
+				this.editing_discount_amount_row_id = null;
+				this.editing_discount_amount_value = null;
+
+			}
+		},
 		// Print QR Code for item
 		async printQRCode(item) {
 			try {
@@ -1283,6 +1703,7 @@ export default {
 				frappe.msgprint(__("Error generating QR code: {0}", [error.message || error]));
 			}
 		},
+
 	},
 
 	mounted() {
@@ -1328,6 +1749,9 @@ export default {
 		}
 		if (this.expandedCache) {
 			this.expandedCache.clear();
+		}
+		if (this.formatCache) {
+			this.formatCache.clear();
 		}
 	},
 };
@@ -1494,7 +1918,7 @@ export default {
 	padding: 0 !important;
 	width: 100% !important;
 	max-width: 100% !important;
-	overflow: hidden;
+	overflow: visible;
 	box-sizing: border-box;
 	/* Ensure it spans the full table width including expand column */
 	position: relative;
@@ -1526,13 +1950,11 @@ export default {
 	from {
 		opacity: 0;
 		transform: translateY(-20px) scale(0.95);
-		max-height: 0;
 	}
 
 	to {
 		opacity: 1;
 		transform: translateY(0) scale(1);
-		max-height: 1000px;
 	}
 }
 
@@ -2062,17 +2484,17 @@ body[dir="rtl"] .expanded-content .pos-table__qty-display {
 }
 
 .responsive-table-container.compact-view .qty-control-btn {
-	width: 28px !important;
-	height: 28px !important;
-	min-width: 28px !important;
+	width: 24px !important;
+	height: 24px !important;
+	min-width: 24px !important;
 }
 
 .responsive-table-container.compact-view .pos-table__qty-display {
-	min-width: 35px;
-	max-width: 65px;
-	height: 28px;
+	min-width: 30px;
+	max-width: 60px;
+	height: 24px;
 	font-size: 0.7rem;
-	padding: 4px 3px;
+	padding: 2px 2px;
 	letter-spacing: -0.03em;
 }
 
@@ -2328,18 +2750,18 @@ body[dir="rtl"] .expanded-content .pos-table__qty-display {
 	}
 
 	.qty-control-btn {
-		width: 28px !important;
-		height: 28px !important;
-		min-width: 28px !important;
+		width: 24px !important;
+		height: 24px !important;
+		min-width: 24px !important;
 		border-radius: 6px !important;
 	}
 
 	.pos-table__qty-display {
-		min-width: 35px;
-		max-width: 70px;
-		padding: 4px 3px;
+		min-width: 30px;
+		max-width: 60px;
+		padding: 2px 2px;
 		font-size: 0.75rem;
-		height: 28px;
+		height: 24px;
 		letter-spacing: -0.03em;
 	}
 
@@ -3035,10 +3457,10 @@ body[dir="rtl"] .amount-value.right-aligned {
 
 /* QTY Counter Styling */
 .qty-control-btn {
-	width: 32px !important;
-	height: 32px !important;
-	min-width: 32px !important;
-	border-radius: 8px !important;
+	width: 24px !important;
+	height: 24px !important;
+	min-width: 24px !important;
+	border-radius: 6px !important;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 	box-shadow:
 		0 2px 8px var(--pos-shadow-light),
@@ -3076,15 +3498,15 @@ body[dir="rtl"] .amount-value.right-aligned {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	padding: 4px;
+	gap: 2px;
+	padding: 2px;
 	/* More flexible sizing for larger numbers */
-	min-width: 130px;
-	max-width: 180px;
+	min-width: 60px;
+	max-width: 100px;
 	width: auto;
 	height: auto;
 	background: var(--pos-surface-variant);
-	border-radius: 12px;
+	border-radius: 8px;
 	backdrop-filter: blur(10px);
 	border: 1px solid var(--pos-border-light);
 	transition: all 0.3s ease;
@@ -3173,14 +3595,14 @@ body[dir="rtl"] .number-field-rtl {
 
 .pos-table__qty-display {
 	/* Dynamic width based on content with proper constraints */
-	min-width: 50px;
-	max-width: 100px;
+	min-width: 15px;
+	max-width: 40px;
 	width: auto;
 	flex: 1 1 auto;
 	text-align: center;
 	font-weight: 600;
-	padding: 6px 4px;
-	border-radius: 6px;
+	padding: 0 2px;
+	border-radius: 4px;
 	background: var(--pos-primary-container);
 	border: 1px solid var(--pos-primary-variant);
 	font-family:
@@ -3192,13 +3614,13 @@ body[dir="rtl"] .number-field-rtl {
 		"lnum" 1,
 		"kern" 1;
 	color: var(--pos-primary);
-	font-size: 0.8rem;
+	font-size: 0.75rem;
 	transition: all 0.2s ease;
 	box-shadow: 0 1px 3px var(--pos-shadow-light);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 32px;
+	height: 24px;
 	/* Handle overflow gracefully */
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -3392,5 +3814,142 @@ body[dir="rtl"] .number-field-rtl {
 
 .delete-action-btn:hover .v-icon {
 	animation: pulse 0.6s ease-in-out;
+}
+
+.pos-table__qty-input {
+	max-width: 80px;
+	margin: 0 auto;
+}
+.pos-table__qty-input :deep(input) {
+	text-align: center;
+	font-weight: 600;
+	-moz-appearance: textfield;
+}
+.pos-table__qty-input :deep(input::-webkit-outer-spin-button),
+.pos-table__qty-input :deep(input::-webkit-inner-spin-button) {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.pos-table__qty-input :deep(.v-input__control) {
+	height: 24px;
+}
+.pos-table__qty-input :deep(.v-field__field) {
+	height: 24px;
+	padding: 0 4px;
+}
+.pos-table__qty-input :deep(.v-field__input) {
+	padding: 0;
+	min-height: 24px;
+	font-size: 0.75rem;
+}
+.pos-table__editor-box {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	padding: 2px;
+	min-width: 60px;
+	max-width: 100px;
+	width: auto;
+	height: auto;
+	background: var(--pos-surface-variant);
+	border-radius: 8px;
+	border: 1px solid var(--pos-border-light);
+	transition: all 0.3s ease;
+	margin: 0 auto;
+	flex-shrink: 0;
+	box-sizing: border-box;
+}
+
+.pos-table__editor-box:hover {
+	background: var(--pos-hover-bg);
+	box-shadow: 0 4px 16px var(--pos-shadow);
+	transform: translateY(-1px);
+}
+
+.pos-table__editor-display {
+	min-width: 40px;
+	max-width: 80px;
+	width: auto;
+	flex: 1 1 auto;
+	text-align: center;
+	font-weight: 600;
+	padding: 0 2px;
+	border-radius: 4px;
+	background: var(--pos-primary-container);
+	border: 1px solid var(--pos-primary-variant);
+	color: var(--pos-primary);
+	font-size: 0.75rem;
+	transition: all 0.2s ease;
+	box-shadow: 0 1px 3px var(--pos-shadow-light);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.pos-table__editor-btn {
+	width: 24px !important;
+	height: 24px !important;
+	min-width: 24px !important;
+	border-radius: 6px !important;
+}
+.pos-table__editor-input {
+	max-width: 80px;
+}
+.pos-table__editor-input :deep(.v-input__control) {
+	height: 24px;
+}
+.pos-table__editor-input :deep(.v-field__field) {
+	height: 24px;
+	padding: 0 4px;
+}
+.pos-table__editor-input :deep(.v-field__input) {
+	padding: 0;
+	min-height: 24px;
+	font-size: 0.75rem;
+}
+.pos-table__editor-input :deep(input) {
+	text-align: center;
+}
+
+.uom-editor {
+	gap: 2px;
+}
+.uom-arrow {
+	flex-shrink: 0;
+}
+.uom-select {
+	min-width: 40px;
+}
+
+.uom-display-mode :deep(.v-field__outline) {
+	display: none;
+}
+.uom-display-mode :deep(.v-field) {
+	background-color: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+.uom-display-mode :deep(.v-field__input) {
+	justify-content: center;
+	padding: 0;
+	font-weight: 600;
+	color: var(--pos-primary);
+}
+.uom-display-mode :deep(.v-select__selection-text) {
+	text-align: center;
+	color: var(--pos-primary);
+	font-size: 0.65rem;
+	letter-spacing: -0.05em;
+	white-space: nowrap;
+	overflow: visible;
+}
+.uom-display-mode :deep(.v-field__append-inner) {
+	display: none;
 }
 </style>
