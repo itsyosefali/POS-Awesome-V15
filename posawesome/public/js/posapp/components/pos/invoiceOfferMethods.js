@@ -575,8 +575,8 @@ export default {
 		new_item.posa_offers = JSON.stringify([]);
 		new_item.posa_offer_applied =
 			offer.discount_type === "Rate" ||
-			offer.discount_type === "Discount Amount" ||
-			offer.discount_type === "Discount Percentage"
+				offer.discount_type === "Discount Amount" ||
+				offer.discount_type === "Discount Percentage"
 				? 1
 				: 0;
 		new_item.posa_is_offer = 1;
@@ -963,11 +963,11 @@ export default {
 	},
 	load_print_page(invoice_name) {
 		// ALWAYS use SALES POS format for online printing
-		const print_format = "SALES POS";
+		const print_format = this.profile.print_format || "SALES POS";
 		const letter_head = this.pos_profile.letter_head || 0;
-		
+
 		console.log("load_print_page: Using SALES POS format");
-		
+
 		const url =
 			frappe.urllib.get_base_url() +
 			"/printview?doctype=Sales%20Invoice&name=" +
@@ -979,10 +979,10 @@ export default {
 			letter_head;
 
 		console.log("Opening print window - will print IMMEDIATELY");
-		
+
 		// Open print window and print immediately
 		const printWindow = window.open(url, "_blank");
-		
+
 		// Print immediately when loaded
 		printWindow.addEventListener(
 			"load",
