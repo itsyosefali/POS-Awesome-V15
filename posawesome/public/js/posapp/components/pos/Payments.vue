@@ -1361,7 +1361,7 @@ export default {
 		async load_print_page(invoiceName) {
 			const targetInvoiceName = invoiceName || this.invoice_doc?.name;
 			if (!targetInvoiceName) return;
-			const print_format = "SALES POS";
+			const print_format = this.pos_profile.print_format || "SALES POS";
 			const no_letterhead = this.pos_profile?.letter_head ? 0 : 1;
 			const printOptions = {
 				invoiceDoc: { ...(this.invoice_doc || {}), name: targetInvoiceName },
