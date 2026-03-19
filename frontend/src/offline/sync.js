@@ -35,7 +35,10 @@ export function saveOfflineInvoice(entry) {
 
 	// Update local stock quantities
 	if (entry.invoice && entry.invoice.items) {
-		updateLocalStock(entry.invoice.items);
+		const doctype = entry.invoice.doctype || "Sales Invoice";
+		updateLocalStock(entry.invoice.items, {
+			direction: doctype === "Purchase Invoice" ? "purchase" : "sale",
+		});
 	}
 }
 
@@ -159,6 +162,50 @@ export function saveOfflineCustomer(entry) {
 	persist(key, memory.offline_customers);
 }
 
+export function saveOfflineSupplier(entry) {
+	const key = "offline_suppliers";
+	const entries = memory.offline_suppliers;
+	// Strip reactive objects so IndexedDB/persist can clone safely.
+	let cleanEntry;
+	try {
+		cleanEntry = JSON.parse(JSON.stringify(entry));
+	} catch (e) {
+		console.error("Failed to serialize offline supplier", e);
+		throw e;
+	}
+
+	entries.push(cleanEntry);
+	if (entries.length > MAX_QUEUE_ITEMS) {
+		entries.splice(0, entries.length - MAX_QUEUE_ITEMS);
+	}
+	memory.offline_suppliers = entries;
+	persist(key, memory.offline_suppliers);
+}
+
+export function getOfflineSuppliers() {
+	return memory.offline_suppliers;
+}
+
+export function clearOfflineSuppliers() {
+	memory.offline_suppliers = [];
+	persist("offline_suppliers", memory.offline_suppliers);
+}
+
+export function deleteOfflineSupplier(index) {
+	if (
+		Array.isArray(memory.offline_suppliers) &&
+		index >= 0 &&
+		index < memory.offline_suppliers.length
+	) {
+		memory.offline_suppliers.splice(index, 1);
+		persist("offline_suppliers", memory.offline_suppliers);
+	}
+}
+
+export function getPendingOfflineSupplierCount() {
+	return memory.offline_suppliers.length;
+}
+
 export function updateOfflineInvoicesCustomer(oldName, newName) {
 	let updated = false;
 	const invoices = memory.offline_invoices || [];
@@ -197,6 +244,8 @@ export async function syncOfflineInvoices() {
 		// Ensure any offline customers are synced first so that invoices
 		// referencing them do not fail during submission
 		await syncOfflineCustomers();
+		// Ensure offline suppliers are synced for Purchase Invoices
+		await syncOfflineSuppliers();
 
 		const invoices = getOfflineInvoices();
 		if (!invoices.length) {
@@ -215,9 +264,18 @@ export async function syncOfflineInvoices() {
 		let drafted = 0;
 
 		for (const inv of invoices) {
+			const doctype = inv?.invoice?.doctype || "Sales Invoice";
+			const submitMethod =
+				doctype === "Purchase Invoice"
+					? "posawesome.posawesome.api.purchase_invoices.submit_invoice"
+					: "posawesome.posawesome.api.invoices.submit_invoice";
+			const updateMethod =
+				doctype === "Purchase Invoice"
+					? "posawesome.posawesome.api.purchase_invoices.update_invoice"
+					: "posawesome.posawesome.api.invoices.update_invoice";
 			try {
 				await frappe.call({
-					method: "posawesome.posawesome.api.invoices.submit_invoice",
+					method: submitMethod,
 					args: {
 						invoice: inv.invoice,
 						data: inv.data,
@@ -228,7 +286,7 @@ export async function syncOfflineInvoices() {
 				console.error("Failed to submit invoice, saving as draft", error);
 				try {
 					await frappe.call({
-						method: "posawesome.posawesome.api.invoices.update_invoice",
+						method: updateMethod,
 						args: { data: inv.invoice },
 					});
 					drafted += 1;
@@ -308,6 +366,41 @@ export async function syncOfflineCustomers() {
 		persist("offline_customers", memory.offline_customers);
 	} else {
 		clearOfflineCustomers();
+	}
+
+	return { pending: failures.length, synced };
+}
+
+export async function syncOfflineSuppliers() {
+	const suppliers = getOfflineSuppliers();
+	if (!suppliers.length) {
+		return { pending: 0, synced: 0 };
+	}
+	if (isOffline()) {
+		return { pending: suppliers.length, synced: 0 };
+	}
+
+	const failures = [];
+	let synced = 0;
+
+	for (const sup of suppliers) {
+		try {
+			await frappe.call({
+				method: "posawesome.posawesome.api.suppliers.create_supplier",
+				args: sup.args,
+			});
+			synced++;
+		} catch (error) {
+			console.error("Failed to create supplier", error);
+			failures.push(sup);
+		}
+	}
+
+	if (failures.length) {
+		memory.offline_suppliers = failures;
+		persist("offline_suppliers", memory.offline_suppliers);
+	} else {
+		clearOfflineSuppliers();
 	}
 
 	return { pending: failures.length, synced };

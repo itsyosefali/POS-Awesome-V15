@@ -44,6 +44,12 @@ import Navbar from "./components/Navbar.vue";
 import POS from "./components/pos/Pos.vue";
 import Payments from "./components/payments/Pay.vue";
 import SalesReturn from "./components/pos/SalesReturnPage.vue";
+import SalesInvoicePage from "./components/pos/SalesInvoicePage.vue";
+import PurchaseInvoicePage from "./components/purchase/PurchaseInvoicePage.vue";
+import PurchaseInvoiceNewPage from "./components/purchase/PurchaseInvoiceNewPage.vue";
+import CustomersPage from "./components/customers/CustomersPage.vue";
+import SuppliersPage from "./components/suppliers/SuppliersPage.vue";
+import ReportsPage from "./components/reports/ReportsPage.vue";
 import Print from "./components/pos/PrintQRCode.vue";
 import StockEntry from "./components/stock/MiniStockEntry.vue";
 import Item from "./components/item/MiniItem.vue";
@@ -100,6 +106,7 @@ export default {
 			posProfile: {},
 			pendingInvoices: 0,
 			lastInvoiceId: "",
+			lastInvoiceDoctype: "",
 
 			// Network status
 			networkOnline: navigator.onLine || false,
@@ -155,6 +162,12 @@ export default {
 		POS,
 		Payments,
 		"Sales Return": SalesReturn,
+		"Sales Invoice": SalesInvoicePage,
+		"Purchase Invoice": PurchaseInvoicePage,
+		"Purchase Invoice (New)": PurchaseInvoiceNewPage,
+		Customers: CustomersPage,
+		Suppliers: SuppliersPage,
+		Reports: ReportsPage,
 		Print,
 		"Stock Entry": StockEntry,
 		Item,
@@ -265,9 +278,16 @@ export default {
 					}
 				});
 
-				// Track last submitted invoice id
-				this.eventBus.on("set_last_invoice", (invoiceId) => {
-					this.lastInvoiceId = invoiceId;
+				// Track last submitted invoice id + doctype
+				this.eventBus.on("set_last_invoice", (payload) => {
+					if (typeof payload === "string") {
+						this.lastInvoiceId = payload;
+						this.lastInvoiceDoctype = "";
+						return;
+					}
+
+					this.lastInvoiceId = payload?.name || "";
+					this.lastInvoiceDoctype = payload?.doctype || "";
 				});
 
 				this.eventBus.on("data-loaded", (name) => {
@@ -280,6 +300,13 @@ export default {
 				// Allow other components to trigger printing
 				this.eventBus.on("print_last_invoice", () => {
 					this.handlePrintLastInvoice();
+				});
+
+				// Allow pages to request navigation (e.g. Purchase Invoice list -> Purchase Invoice (New))
+				this.eventBus.on("change-page", (page) => {
+					if (page) {
+						this.setPage(page);
+					}
 				});
 
 				// Manual trigger to sync offline invoices
@@ -356,9 +383,9 @@ export default {
 
 			const print_format = this.posProfile.print_format_for_online || this.posProfile.print_format;
 			const letter_head = this.posProfile.letter_head || 0;
-			const doctype = this.posProfile.create_pos_invoice_instead_of_sales_invoice
-				? "POS Invoice"
-				: "Sales Invoice";
+			const doctype =
+				this.lastInvoiceDoctype ||
+				(this.posProfile.create_pos_invoice_instead_of_sales_invoice ? "POS Invoice" : "Sales Invoice");
 			const url =
 				frappe.urllib.get_base_url() +
 				"/printview?doctype=" +

@@ -30,8 +30,9 @@
 				<!-- Top Row: Customer Selection and Invoice Type -->
 				<v-row align="center" class="items px-3 py-2">
 					<v-col :cols="pos_profile.posa_allow_sales_order ? 9 : 12" class="pb-0 pr-0">
-						<!-- Customer selection component -->
-                                            <Customer ref="customerComponent" />
+						<!-- Customer/Supplier selection component -->
+						<Supplier v-if="isPurchaseInvoice" ref="supplierComponent" />
+						<Customer v-else ref="customerComponent" />
 					</v-col>
 					<!-- Invoice Type Selection (Only shown if sales orders are allowed) -->
 					<v-col v-if="pos_profile.posa_allow_sales_order" cols="3" class="pb-4">
@@ -331,6 +332,7 @@
 /* global frappe, __ */
 import format from "../../format";
 import Customer from "./Customer.vue";
+import Supplier from "../suppliers/Supplier.vue";
 import DeliveryCharges from "./DeliveryCharges.vue";
 import PostingDateRow from "./PostingDateRow.vue";
 import MultiCurrencyRow from "./MultiCurrencyRow.vue";
@@ -344,6 +346,7 @@ import offerMethods from "./invoiceOfferMethods";
 import shortcutMethods from "./invoiceShortcuts";
 import { useInvoiceStore } from "../../stores/invoiceStore.js";
 import { useCustomersStore } from "../../stores/customersStore.js";
+import { useSuppliersStore } from "../../stores/suppliersStore.js";
 import { storeToRefs } from "pinia";
 import stockCoordinator from "../../utils/stockCoordinator.js";
 
@@ -353,8 +356,16 @@ export default {
 	setup() {
 		const invoiceStore = useInvoiceStore();
 		const customersStore = useCustomersStore();
+		const suppliersStore = useSuppliersStore();
 		const { selectedCustomer, refreshToken } = storeToRefs(customersStore);
-		return { invoiceStore, selectedCustomer, customerRefreshToken: refreshToken };
+		const { selectedSupplier, refreshToken: supplierRefreshToken } = storeToRefs(suppliersStore);
+		return {
+			invoiceStore,
+			selectedCustomer,
+			customerRefreshToken: refreshToken,
+			selectedSupplier,
+			supplierRefreshToken,
+		};
 	},
 	data() {
 		return {
@@ -422,6 +433,7 @@ export default {
 			selected_price_list: "", // Currently selected price list
 			price_list_currency: "", // Currency of the selected price list
 			_shortcutHandlers: {},
+			forcedDoctype: null,
 			selected_columns: [], // Selected columns for items table
                         temp_selected_columns: [], // Temporary array for column selection
                         available_columns: [], // All available columns
@@ -434,6 +446,7 @@ export default {
 
 	components: {
 		Customer,
+		Supplier,
 		DeliveryCharges,
 		PostingDateRow,
 		MultiCurrencyRow,
@@ -442,6 +455,9 @@ export default {
 		ItemsTable,
 	},
 	computed: {
+		isPurchaseInvoice() {
+			return this.forcedDoctype === "Purchase Invoice";
+		},
 		items: {
 			get() {
 				return this.invoiceStore.items;
@@ -1542,6 +1558,9 @@ export default {
                         reset_posting_date: this.handleResetPostingDate,
                         calc_uom: this.calc_uom,
                         show_payment: this.handleShowPayment,
+						force_invoice_doctype: (doctype) => {
+							this.forcedDoctype = doctype || null;
+						},
                 };
 
                 Object.entries(this._busHandlers).forEach(([eventName, handler]) => {
@@ -1584,6 +1603,9 @@ export default {
 		this.$watch(
 			() => this.selectedCustomer,
 			(newCustomer) => {
+				if (this.isPurchaseInvoice) {
+					return;
+				}
 				if (newCustomer) {
 					if (this.customer !== newCustomer) {
 						this.customer = newCustomer;
@@ -1597,9 +1619,28 @@ export default {
 		this.$watch(
 			() => this.customerRefreshToken,
 			() => {
+				if (this.isPurchaseInvoice) {
+					return;
+				}
 				if (this.customer) {
 					this.fetch_customer_details();
 				}
+			},
+		);
+		this.$watch(
+			() => this.selectedSupplier,
+			(newSupplier) => {
+				if (!this.isPurchaseInvoice) {
+					return;
+				}
+				this.customer = newSupplier || "";
+			},
+			{ immediate: true },
+		);
+		this.$watch(
+			() => this.supplierRefreshToken,
+			() => {
+				// Supplier info is optional for now; keep parity with customer refresh hook.
 			},
 		);
                 this._shortcutHandlers = this._shortcutHandlers || {};

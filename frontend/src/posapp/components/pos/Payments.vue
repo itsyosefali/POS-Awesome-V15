@@ -1564,7 +1564,9 @@ export default {
 						? "posawesome.posawesome.api.sales_orders.submit_sales_order"
 						: this.invoiceType === "Quotation"
 							? "posawesome.posawesome.api.quotations.submit_quotation"
-							: "posawesome.posawesome.api.invoices.submit_invoice",
+							: this.invoice_doc?.doctype === "Purchase Invoice"
+								? "posawesome.posawesome.api.purchase_invoices.submit_invoice"
+								: "posawesome.posawesome.api.invoices.submit_invoice",
 				args: {
 					data: data,
 					invoice: this.invoice_doc,
@@ -1619,7 +1621,13 @@ export default {
 					vm.is_cashback = true;
 					vm.is_credit_return = false;
 					vm.sales_person = "";
-					vm.eventBus.emit("set_last_invoice", vm.invoice_doc.name);
+					// Store doctype so "Print Last Invoice" can render the correct document type
+					const lastDoctype =
+						vm.invoice_doc?.doctype ||
+						(vm.pos_profile?.create_pos_invoice_instead_of_sales_invoice
+							? "POS Invoice"
+							: "Sales Invoice");
+					vm.eventBus.emit("set_last_invoice", { name: vm.invoice_doc.name, doctype: lastDoctype });
                                         vm.eventBus.emit("show_message", {
                                                 title:
                                                         vm.invoiceType === "Order" && vm.pos_profile.posa_create_only_sales_order

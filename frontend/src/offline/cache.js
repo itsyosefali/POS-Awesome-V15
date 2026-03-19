@@ -20,6 +20,7 @@ let cacheUsageEstimatePromise = null;
 export const memory = {
 	offline_invoices: [],
 	offline_customers: [],
+	offline_suppliers: [],
 	offline_payments: [],
 	pos_last_sync_totals: { pending: 0, synced: 0, drafted: 0 },
 	uom_cache: {},
@@ -28,6 +29,7 @@ export const memory = {
 	local_stock_cache: {},
 	stock_cache_ready: false,
 	customer_storage: [],
+	supplier_storage: [],
 	pos_opening_storage: null,
 	opening_dialog_storage: null,
 	sales_persons_storage: [],
@@ -38,6 +40,7 @@ export const memory = {
 	item_groups_cache: [],
 	items_last_sync: null,
 	customers_last_sync: null,
+	suppliers_last_sync: null,
 	// Track the current cache schema version
 	cache_version: CACHE_VERSION,
 	cache_ready: false,
@@ -99,11 +102,13 @@ export const memoryInitPromise = (async () => {
 export function resetOfflineState() {
 	memory.offline_invoices = [];
 	memory.offline_customers = [];
+	memory.offline_suppliers = [];
 	memory.offline_payments = [];
 	memory.pos_last_sync_totals = { pending: 0, synced: 0, drafted: 0 };
 
 	persist("offline_invoices", memory.offline_invoices);
 	persist("offline_customers", memory.offline_customers);
+	persist("offline_suppliers", memory.offline_suppliers);
 	persist("offline_payments", memory.offline_payments);
 	persist("pos_last_sync_totals", memory.pos_last_sync_totals);
 }
@@ -236,6 +241,65 @@ export async function clearCustomerStorage() {
 	}
 }
 
+// Suppliers storage helpers (IndexedDB)
+export async function getSupplierStorage(limit = Infinity, offset = 0) {
+	try {
+		await checkDbHealth();
+		if (!db.isOpen()) await db.open();
+		return await db.table("suppliers").offset(offset).limit(limit).toArray();
+	} catch (e) {
+		console.error("Failed to get suppliers from storage", e);
+		return [];
+	}
+}
+
+export async function setSupplierStorage(suppliers) {
+	try {
+		await checkDbHealth();
+		if (!db.isOpen()) await db.open();
+
+		const clean = (suppliers || []).map((c) => ({
+			name: c.name,
+			supplier_name: c.supplier_name,
+			mobile_no: c.mobile_no,
+			email_id: c.email_id,
+			primary_address: c.primary_address,
+			tax_id: c.tax_id,
+		}));
+
+		const CHUNK_SIZE = 1000;
+		await db.transaction("rw", db.table("suppliers"), async () => {
+			for (let i = 0; i < clean.length; i += CHUNK_SIZE) {
+				const chunk = clean.slice(i, i + CHUNK_SIZE);
+				await db.table("suppliers").bulkPut(chunk);
+			}
+		});
+	} catch (e) {
+		console.error("Failed to set supplier storage", e);
+	}
+}
+
+export async function getSupplierStorageCount() {
+	try {
+		await checkDbHealth();
+		if (!db.isOpen()) await db.open();
+		return await db.table("suppliers").count();
+	} catch (e) {
+		console.error("Failed to count suppliers", e);
+		return 0;
+	}
+}
+
+export async function clearSupplierStorage() {
+	try {
+		await checkDbHealth();
+		if (!db.isOpen()) await db.open();
+		await db.table("suppliers").clear();
+	} catch (e) {
+		console.error("Failed to clear supplier storage", e);
+	}
+}
+
 export function getItemsLastSync() {
 	return memory.items_last_sync || null;
 }
@@ -252,6 +316,15 @@ export function getCustomersLastSync() {
 export function setCustomersLastSync(ts) {
 	memory.customers_last_sync = ts;
 	persist("customers_last_sync", memory.customers_last_sync);
+}
+
+export function getSuppliersLastSync() {
+	return memory.suppliers_last_sync || null;
+}
+
+export function setSuppliersLastSync(ts) {
+	memory.suppliers_last_sync = ts;
+	persist("suppliers_last_sync", memory.suppliers_last_sync);
 }
 
 export function getSalesPersonsStorage() {

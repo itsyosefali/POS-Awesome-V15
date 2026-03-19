@@ -74,7 +74,17 @@ import { useCustomersStore } from "../../stores/customersStore.js";
 import { storeToRefs } from "pinia";
 
 export default {
-	setup() {
+	props: {
+		forceSalesInvoice: {
+			type: Boolean,
+			default: false,
+		},
+		forceInvoiceDoctype: {
+			type: String,
+			default: "",
+		},
+	},
+	setup(props) {
 		const instance = getCurrentInstance();
 		const responsive = useResponsive();
 		const rtl = useRtl();
@@ -82,6 +92,16 @@ export default {
 			if (instance && instance.proxy) {
 				instance.proxy.dialog = true;
 			}
+		}, {
+			posProfileTransform: (posProfile) => {
+				if (!props.forceSalesInvoice) return posProfile;
+				if (!posProfile) return posProfile;
+				return {
+					...posProfile,
+					// Force invoices saved from this screen to be Sales Invoice (not POS Invoice)
+					create_pos_invoice_instead_of_sales_invoice: 0,
+				};
+			},
 		});
 		const offers = useOffers();
 		return { ...responsive, ...rtl, ...shift, ...offers };
@@ -133,16 +153,28 @@ export default {
 
 	mounted: function () {
 		this.$nextTick(function () {
+			if (this.forceInvoiceDoctype) {
+				this.eventBus.emit("force_invoice_doctype", this.forceInvoiceDoctype);
+			}
 			this.check_opening_entry();
 			this.get_pos_setting();
 			this.eventBus.on("close_opening_dialog", () => {
 				this.dialog = false;
 			});
 			this.eventBus.on("register_pos_data", (data) => {
-				this.pos_profile = data.pos_profile;
+				const rawPosProfile = data.pos_profile;
+				const patchedPosProfile =
+					this.forceSalesInvoice && rawPosProfile
+						? {
+								...rawPosProfile,
+								create_pos_invoice_instead_of_sales_invoice: 0,
+							}
+						: rawPosProfile;
+
+				this.pos_profile = patchedPosProfile;
 				this.get_offers(this.pos_profile.name, this.pos_profile);
 				this.pos_opening_shift = data.pos_opening_shift;
-				this.eventBus.emit("register_pos_profile", data);
+				this.eventBus.emit("register_pos_profile", { ...data, pos_profile: patchedPosProfile });
 				console.info("LoadPosProfile");
 			});
 			// When profile is registered directly from composables,

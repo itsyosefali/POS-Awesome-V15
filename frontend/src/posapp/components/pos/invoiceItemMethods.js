@@ -653,7 +653,10 @@ export default {
 		}
 
 		// Always set these fields first
-                if (this.invoiceType === "Quotation") {
+		// Allow screens to force a doctype (e.g. Purchase Invoice) via the invoice component.
+		if (this.forcedDoctype) {
+			doc.doctype = this.forcedDoctype;
+		} else if (this.invoiceType === "Quotation") {
                         doc.doctype = "Quotation";
                 } else if (this.invoiceType === "Order" && this.pos_profile.posa_create_only_sales_order) {
                         doc.doctype = "Sales Order";
@@ -1184,7 +1187,9 @@ export default {
 				? "posawesome.posawesome.api.sales_orders.update_sales_order"
 				: doc.doctype === "Quotation"
 					? "posawesome.posawesome.api.quotations.update_quotation"
-					: "posawesome.posawesome.api.invoices.update_invoice";
+					: doc.doctype === "Purchase Invoice"
+						? "posawesome.posawesome.api.purchase_invoices.update_invoice"
+						: "posawesome.posawesome.api.invoices.update_invoice";
 
 		try {
                         const response = await frappe.call({

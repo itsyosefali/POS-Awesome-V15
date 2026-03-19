@@ -11,6 +11,22 @@ from .customers import (
     make_address,
     set_customer_info,
 )
+from .suppliers import (
+    create_supplier,
+    get_supplier_addresses,
+    get_supplier_info,
+    get_supplier_names,
+    get_suppliers_count,
+    make_address,
+    set_supplier_info,
+)
+from .purchase_invoices import (
+    delete_invoice as purchase_delete_invoice,
+    get_draft_invoices as purchase_get_draft_invoices,
+    submit_invoice as purchase_submit_invoice,
+    update_invoice as purchase_update_invoice,
+    validate_cart_items as purchase_validate_cart_items,
+)
 from .invoices import (
     delete_invoice,
     get_draft_invoices,

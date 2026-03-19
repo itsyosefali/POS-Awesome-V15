@@ -3,7 +3,7 @@ import { withWriteLock } from "./db-utils.js";
 
 // --- Dexie initialization ---------------------------------------------------
 export const db = new Dexie("posawesome_offline");
-db.version(7)
+db.version(8)
 	.stores({
 		keyval: "&key",
 		queue: "&key",
@@ -11,6 +11,7 @@ db.version(7)
 		items: "&item_code,item_name,item_group,*barcodes,*name_keywords,*serials,*batches",
 		item_prices: "&[price_list+item_code],price_list,item_code",
 		customers: "&name,customer_name,mobile_no,email_id,tax_id",
+		suppliers: "&name,supplier_name,mobile_no,email_id,tax_id,primary_address",
 	})
 	.upgrade((tx) =>
 		tx
@@ -37,9 +38,11 @@ db.version(7)
 export const KEY_TABLE_MAP = {
 	offline_invoices: "queue",
 	offline_customers: "queue",
+	offline_suppliers: "queue",
 	offline_payments: "queue",
 	item_details_cache: "cache",
 	customer_storage: "cache",
+	supplier_storage: "cache",
 };
 
 const LARGE_KEYS = new Set(["items", "item_details_cache", "local_stock_cache"]);

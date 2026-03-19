@@ -8,9 +8,11 @@ import {
 	setTaxTemplate,
 } from "../../offline/index.js";
 
-export function usePosShift(openDialog) {
+export function usePosShift(openDialog, options = {}) {
 	const { proxy } = getCurrentInstance();
 	const eventBus = proxy?.eventBus;
+	const posProfileTransform =
+		typeof options?.posProfileTransform === "function" ? options.posProfileTransform : null;
 
 	const pos_profile = ref(null);
 	const pos_opening_shift = ref(null);
@@ -24,7 +26,8 @@ export function usePosShift(openDialog) {
 			})
 			.then((r) => {
 				if (r.message) {
-					pos_profile.value = r.message.pos_profile;
+					const rawPosProfile = r.message.pos_profile;
+					pos_profile.value = posProfileTransform ? posProfileTransform(rawPosProfile) : rawPosProfile;
 					pos_opening_shift.value = r.message.pos_opening_shift;
 					if (pos_profile.value.taxes_and_charges) {
 						frappe.call({
@@ -40,7 +43,10 @@ export function usePosShift(openDialog) {
 							},
 						});
 					}
-					eventBus?.emit("register_pos_profile", r.message);
+					eventBus?.emit("register_pos_profile", {
+						...r.message,
+						pos_profile: pos_profile.value,
+					});
 					eventBus?.emit("set_company", r.message.company);
 					try {
 						frappe.realtime.emit("pos_profile_registered");
@@ -56,9 +62,13 @@ export function usePosShift(openDialog) {
 				} else {
 					const data = getOpeningStorage();
 					if (data) {
-						pos_profile.value = data.pos_profile;
+						const rawPosProfile = data.pos_profile;
+						pos_profile.value = posProfileTransform ? posProfileTransform(rawPosProfile) : rawPosProfile;
 						pos_opening_shift.value = data.pos_opening_shift;
-						eventBus?.emit("register_pos_profile", data);
+						eventBus?.emit("register_pos_profile", {
+							...data,
+							pos_profile: pos_profile.value,
+						});
 						eventBus?.emit("set_company", data.company);
 						try {
 							frappe.realtime.emit("pos_profile_registered");
