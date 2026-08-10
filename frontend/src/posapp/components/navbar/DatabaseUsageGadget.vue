@@ -22,7 +22,7 @@
 							<polyline
 								:points="sparklinePoints"
 								fill="none"
-								stroke="#1976d2"
+								stroke="#304FF3"
 								stroke-width="2"
 							/>
 						</svg>
@@ -145,7 +145,7 @@ const sparklinePoints = computed(() => {
 .db-current-size {
 	font-size: 13px;
 	font-weight: 600;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	min-width: 48px;
 	text-align: right;
 	direction: ltr;
@@ -181,7 +181,7 @@ const sparklinePoints = computed(() => {
 .db-tooltip-subtitle {
 	font-size: 12px;
 	font-weight: 600;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 }
 .db-top-tables {
 	list-style: none;
@@ -206,7 +206,7 @@ const sparklinePoints = computed(() => {
 	text-align: left;
 }
 .db-tooltip-tip {
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-size: 12px;
 	display: flex;
 	align-items: center;
@@ -226,8 +226,8 @@ const sparklinePoints = computed(() => {
 :deep(.v-overlay__content) {
 	background: #e3f2fd !important;
 	color: #1a237e !important;
-	box-shadow: 0 4px 16px rgba(25, 118, 210, 0.1) !important;
-	border: 1px solid #90caf9 !important;
+	box-shadow: 0 4px 16px rgba(48, 79, 243, 0.1) !important;
+	border: 1px solid #A8B5FA !important;
 	direction: ltr !important;
 	text-align: left !important;
 }
@@ -244,7 +244,7 @@ const sparklinePoints = computed(() => {
 :deep(.v-theme--dark) .v-overlay__content {
 	background: #26344d !important;
 	color: #fff !important;
-	border: 1px solid #1976d2 !important;
+	border: 1px solid var(--pos-primary, #304FF3) !important;
 	direction: ltr !important;
 	text-align: left !important;
 }

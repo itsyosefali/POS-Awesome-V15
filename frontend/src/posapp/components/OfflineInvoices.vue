@@ -286,7 +286,7 @@ export default {
 
 /* ========== REVAMPED HEADER SECTION ========== */
 .offline-header {
-	background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%) !important;
+	background: linear-gradient(135deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%) !important;
 	color: white !important;
 	border-bottom: none !important;
 	position: relative;
@@ -488,8 +488,8 @@ export default {
 
 /* Footer Divider */
 .footer-divider {
-	border-color: rgba(25, 118, 210, 0.1) !important;
-	background: linear-gradient(90deg, transparent 0%, rgba(25, 118, 210, 0.2) 50%, transparent 100%);
+	border-color: rgba(48, 79, 243, 0.1) !important;
+	background: linear-gradient(90deg, transparent 0%, rgba(48, 79, 243, 0.2) 50%, transparent 100%);
 	height: 2px;
 }
 
@@ -702,7 +702,7 @@ export default {
 
 /* Sync Button */
 .sync-action-btn-revamped {
-	background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%) !important;
+	background: linear-gradient(135deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%) !important;
 	color: white !important;
 	border-radius: 14px !important;
 	text-transform: none !important;
@@ -711,15 +711,15 @@ export default {
 	min-width: 180px !important;
 	height: 48px !important;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+	box-shadow: 0 4px 12px rgba(48, 79, 243, 0.3) !important;
 	letter-spacing: 0.5px;
 	font-size: 15px !important;
 }
 
 .sync-action-btn-revamped:hover {
 	transform: translateY(-3px) scale(1.02) !important;
-	box-shadow: 0 8px 25px rgba(25, 118, 210, 0.4) !important;
-	background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%) !important;
+	box-shadow: 0 8px 25px rgba(48, 79, 243, 0.4) !important;
+	background: linear-gradient(135deg, var(--pos-primary-variant, #1A2D8F) 0%, var(--pos-primary, #304FF3) 100%) !important;
 }
 
 .sync-action-btn-revamped:active {

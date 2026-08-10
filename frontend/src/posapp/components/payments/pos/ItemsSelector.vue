@@ -4307,8 +4307,8 @@ export default {
 
 .card-item-card:hover {
 	transform: translate3d(0, -2px, 0);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-	border-color: var(--primary-color, #1976d2);
+	box-shadow: 0 8px 24px rgba(48, 79, 243, 0.12);
+	border-color: var(--pos-primary, #304FF3);
 }
 
 .card-item-image-container {
@@ -4402,7 +4402,7 @@ export default {
 	align-items: center;
 	gap: 2px;
 	font-weight: 600;
-	color: var(--primary-color, #1976d2);
+	color: var(--primary-color, var(--pos-primary, #304FF3));
 }
 
 .secondary-price {
@@ -4478,7 +4478,7 @@ export default {
 
 :deep([data-theme="dark"]) .card-item-card:hover,
 :deep(.v-theme--dark) .card-item-card:hover {
-	border-color: var(--primary-color, #90caf9);
+	border-color: var(--primary-color, #A8B5FA);
 }
 
 :deep([data-theme="dark"]) .card-item-image-container,
@@ -4532,20 +4532,22 @@ export default {
 	letter-spacing: 1px;
 	padding: 16px 20px;
 	transition: all 0.3s ease;
-	border-bottom: 3px solid #1976d2;
-	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
-	color: #2c3e50;
+	border-bottom: 3px solid var(--pos-primary, #304FF3);
+	background: linear-gradient(
+		135deg,
+		var(--pos-table-header-bg, #f0f1f5) 0%,
+		var(--pos-primary-container, #e8ecff) 100%
+	);
+	color: var(--pos-text-primary, #0b0e14);
 	position: sticky !important;
 	top: 0 !important;
 	z-index: 10 !important;
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+	box-shadow: 0 2px 8px var(--pos-shadow, rgba(0, 0, 0, 0.1));
+	text-shadow: none;
 	/* Enhanced Arabic number font stack */
-	font-family:
-		"SF Pro Display", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans Arabic", "Tahoma",
-		sans-serif;
+	font-family: var(--pos-font-body, "Inter", "Noto Sans Arabic", "Tahoma", sans-serif);
 	font-variant-numeric: lining-nums tabular-nums;
 	font-feature-settings:
 		"tnum" 1,
@@ -4667,7 +4669,7 @@ export default {
 }
 
 .action-btn-consistent:hover {
-	background-color: rgba(25, 118, 210, 0.1) !important;
+	background-color: rgba(48, 79, 243, 0.1) !important;
 	transform: translateY(-1px) !important;
 }
 

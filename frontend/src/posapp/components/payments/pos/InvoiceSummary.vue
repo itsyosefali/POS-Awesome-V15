@@ -315,9 +315,9 @@ export default {
 }
 
 .modern-summary-card {
-	border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+	border: 1px solid color-mix(in srgb, var(--pos-primary, #304FF3) 12%, transparent);
 	border-radius: 14px !important;
-	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+	box-shadow: 0 8px 20px var(--pos-shadow, rgba(48, 79, 243, 0.08));
 }
 
 .summary-header {

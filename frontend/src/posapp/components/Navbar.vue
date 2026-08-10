@@ -118,7 +118,6 @@ import StatusIndicator from "./navbar/StatusIndicator.vue";
 import CacheUsageMeter from "./navbar/CacheUsageMeter.vue";
 import AboutDialog from "./navbar/AboutDialog.vue";
 import OfflineInvoices from "./OfflineInvoices.vue";
-import posLogo from "./payments/pos/pos.png";
 import { forceClearAllCache } from "../../offline/cache.js";
 import { clearAllCaches } from "../../utils/clearAllCaches.js";
 import { isOffline } from "../../offline/index.js";
@@ -214,8 +213,8 @@ export default {
 			{ text: "Reports", icon: "mdi-chart-bar" },
 			{ text: "Recipe Usage", icon: "mdi-chart-timeline-variant" },
 		],
-		company: "POS Awesome",
-			companyImg: posLogo,
+		company: "NMG POS",
+			companyImg: "",
 			showAboutDialog: false,
 			showOfflineInvoices: false,
 			freeze: false,

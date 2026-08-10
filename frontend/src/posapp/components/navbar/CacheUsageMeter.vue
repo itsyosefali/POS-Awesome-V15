@@ -209,13 +209,13 @@ export default {
 }
 .cache-bar-fill {
 	height: 100%;
-	background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+	background: linear-gradient(90deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%);
 	border-radius: 4px;
 	transition: width 0.3s;
 }
 .cache-bar-label {
 	font-size: 11px;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-weight: 600;
 }
 .cache-tooltip-warning {
@@ -226,7 +226,7 @@ export default {
 	margin-bottom: 4px;
 }
 .cache-tooltip-tip {
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-size: 12px;
 	display: flex;
 	align-items: center;
@@ -250,8 +250,8 @@ export default {
 :deep(.v-overlay__content) {
 	background: #e3f2fd !important;
 	color: #1a237e !important;
-	box-shadow: 0 4px 16px rgba(25, 118, 210, 0.1) !important;
-	border: 1px solid #90caf9 !important;
+	box-shadow: 0 4px 16px rgba(48, 79, 243, 0.1) !important;
+	border: 1px solid #A8B5FA !important;
 }
 
 .cache-tooltip-title,
@@ -265,7 +265,7 @@ export default {
 :deep(.v-theme--dark) .v-overlay__content {
 	background: #26344d !important;
 	color: #fff !important;
-	border: 1px solid #1976d2 !important;
+	border: 1px solid var(--pos-primary, #304FF3) !important;
 }
 
 :deep([data-theme="dark"]) .cache-tooltip-title,

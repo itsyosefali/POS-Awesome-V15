@@ -110,51 +110,57 @@ export function useTheme() {
 		const root = document.documentElement;
 
 		if (themeName === "dark") {
-			// Dark theme CSS custom properties
-			root.style.setProperty("--pos-bg-primary", "#121212");
-			root.style.setProperty("--pos-bg-secondary", "#1E1E1E");
-			root.style.setProperty("--pos-bg-tertiary", "#2d2d2d");
-			root.style.setProperty("--pos-surface", "#1E1E1E");
-			root.style.setProperty("--pos-surface-variant", "#373737");
+			// NMG dark (ink) theme
+			root.style.setProperty("--pos-bg-primary", "#0A0C16");
+			root.style.setProperty("--pos-bg-secondary", "#0B0E14");
+			root.style.setProperty("--pos-bg-tertiary", "#121526");
+			root.style.setProperty("--pos-surface", "#121526");
+			root.style.setProperty("--pos-surface-variant", "#1A1F35");
 
 			root.style.setProperty("--pos-text-primary", "#ffffff");
-			root.style.setProperty("--pos-text-secondary", "#e0e0e0");
-			root.style.setProperty("--pos-text-disabled", "#9e9e9e");
+			root.style.setProperty("--pos-text-secondary", "#b8bcc8");
+			root.style.setProperty("--pos-text-disabled", "#6b7080");
 
-			root.style.setProperty("--pos-primary", "#00D4FF");
-			root.style.setProperty("--pos-primary-variant", "#00A0CC");
-			root.style.setProperty("--pos-secondary", "#00E5B8");
+			root.style.setProperty("--pos-primary", "#304FF3");
+			root.style.setProperty("--pos-primary-variant", "#5B73F5");
+			root.style.setProperty("--pos-secondary", "#00F0FF");
 
-			root.style.setProperty("--pos-border", "rgba(255, 255, 255, 0.12)");
-			root.style.setProperty("--pos-divider", "#373737");
-			root.style.setProperty("--pos-shadow", "rgba(0, 0, 0, 0.4)");
+			root.style.setProperty("--pos-border", "rgba(48, 79, 243, 0.2)");
+			root.style.setProperty("--pos-divider", "rgba(255, 255, 255, 0.08)");
+			root.style.setProperty("--pos-shadow", "rgba(0, 0, 0, 0.45)");
+			root.style.setProperty("--pos-glow", "0 0 14px rgba(48, 79, 243, 0.35)");
 
-			root.style.setProperty("--pos-card-bg", "#1E1E1E");
-			root.style.setProperty("--pos-input-bg", "#2d2d2d");
-			root.style.setProperty("--pos-hover-bg", "rgba(255, 255, 255, 0.12)");
+			root.style.setProperty("--pos-card-bg", "#121526");
+			root.style.setProperty("--pos-input-bg", "#1A1F35");
+			root.style.setProperty("--pos-hover-bg", "rgba(48, 79, 243, 0.14)");
+			root.style.setProperty("--pos-navbar-bg", "#121526");
+			root.style.setProperty("--pos-sidebar-bg", "#0A0C16");
 		} else {
-			// Light theme CSS custom properties
+			// NMG light theme
 			root.style.setProperty("--pos-bg-primary", "#ffffff");
-			root.style.setProperty("--pos-bg-secondary", "#f8f9fa");
-			root.style.setProperty("--pos-bg-tertiary", "#e3f2fd");
+			root.style.setProperty("--pos-bg-secondary", "#f5f6fa");
+			root.style.setProperty("--pos-bg-tertiary", "#e8ecff");
 			root.style.setProperty("--pos-surface", "#ffffff");
-			root.style.setProperty("--pos-surface-variant", "#f5f5f5");
+			root.style.setProperty("--pos-surface-variant", "#f0f1f5");
 
-			root.style.setProperty("--pos-text-primary", "#212121");
-			root.style.setProperty("--pos-text-secondary", "#666666");
+			root.style.setProperty("--pos-text-primary", "#0B0E14");
+			root.style.setProperty("--pos-text-secondary", "#5a5f6e");
 			root.style.setProperty("--pos-text-disabled", "#9e9e9e");
 
-			root.style.setProperty("--pos-primary", "#0097A7");
-			root.style.setProperty("--pos-primary-variant", "#00838F");
-			root.style.setProperty("--pos-secondary", "#00BCD4");
+			root.style.setProperty("--pos-primary", "#304FF3");
+			root.style.setProperty("--pos-primary-variant", "#1A2D8F");
+			root.style.setProperty("--pos-secondary", "#00F0FF");
 
-			root.style.setProperty("--pos-border", "rgba(0, 0, 0, 0.12)");
-			root.style.setProperty("--pos-divider", "rgba(0, 0, 0, 0.06)");
-			root.style.setProperty("--pos-shadow", "rgba(0, 0, 0, 0.1)");
+			root.style.setProperty("--pos-border", "rgba(11, 14, 20, 0.12)");
+			root.style.setProperty("--pos-divider", "rgba(11, 14, 20, 0.06)");
+			root.style.setProperty("--pos-shadow", "rgba(48, 79, 243, 0.08)");
+			root.style.setProperty("--pos-glow", "0 0 12px rgba(48, 79, 243, 0.25)");
 
 			root.style.setProperty("--pos-card-bg", "#ffffff");
-			root.style.setProperty("--pos-input-bg", "#f5f5f5");
-			root.style.setProperty("--pos-hover-bg", "rgba(25, 118, 210, 0.04)");
+			root.style.setProperty("--pos-input-bg", "#f0f1f5");
+			root.style.setProperty("--pos-hover-bg", "rgba(48, 79, 243, 0.06)");
+			root.style.setProperty("--pos-navbar-bg", "#ffffff");
+			root.style.setProperty("--pos-sidebar-bg", "#f5f6fa");
 		}
 
 		// Minimal DOM recalculation
@@ -237,14 +243,14 @@ export function useTheme() {
 	// Computed properties for common theme values
 	const themeColors = computed(() => {
 		return {
-			background: isDarkMode.value ? "#121212" : "#ffffff",
-			surface: isDarkMode.value ? "#1E1E1E" : "#ffffff",
-			surfaceVariant: isDarkMode.value ? "#2d2d2d" : "#f5f5f5",
-			primary: isDarkMode.value ? "#00D4FF" : "#0097A7",
-			textPrimary: isDarkMode.value ? "#ffffff" : "#212121",
-			textSecondary: isDarkMode.value ? "#e0e0e0" : "#666666",
-			border: isDarkMode.value ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)",
-			cardBackground: isDarkMode.value ? "#1E1E1E" : "#ffffff",
+			background: isDarkMode.value ? "#0A0C16" : "#ffffff",
+			surface: isDarkMode.value ? "#121526" : "#ffffff",
+			surfaceVariant: isDarkMode.value ? "#1A1F35" : "#f0f1f5",
+			primary: "#304FF3",
+			textPrimary: isDarkMode.value ? "#ffffff" : "#0B0E14",
+			textSecondary: isDarkMode.value ? "#b8bcc8" : "#5a5f6e",
+			border: isDarkMode.value ? "rgba(48, 79, 243, 0.2)" : "rgba(11, 14, 20, 0.12)",
+			cardBackground: isDarkMode.value ? "#121526" : "#ffffff",
 		};
 	});
 

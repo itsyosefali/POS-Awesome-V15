@@ -1,10 +1,10 @@
 <template>
 	<v-dialog v-model="dialogOpen" max-width="650" persistent>
 		<v-card class="about-dialog-card-improved">
-			<v-card-title class="about-header-improved pa-5">
+				<v-card-title class="about-header-improved pa-5">
 				<div class="header-content-improved">
-					<div class="header-icon-wrapper-improved">
-						<v-icon size="22" class="header-icon">mdi-information-outline</v-icon>
+					<div class="header-brand-improved">
+						<NmgLogo size="lg" show-label label="POS" />
 					</div>
 					<div class="header-text-improved">
 						<h3 class="header-title-improved">{{ __("About") }}</h3>
@@ -93,11 +93,15 @@
 
 <script>
 import { formatBuildVersion } from "../../stores/updateStore.js";
+import NmgLogo from "../brand/NmgLogo.vue";
 
 const BUILD_VERSION = typeof __BUILD_VERSION__ !== "undefined" ? __BUILD_VERSION__ : null;
 
 export default {
 	name: "AboutDialog",
+	components: {
+		NmgLogo,
+	},
 	props: {
 		modelValue: Boolean,
 	},
@@ -183,7 +187,7 @@ export default {
 	left: 0;
 	right: 0;
 	height: 3px;
-	background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+	background: linear-gradient(90deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%);
 }
 
 .header-content-improved {
@@ -194,14 +198,20 @@ export default {
 	/* Space for close button */
 }
 
+.header-brand-improved {
+	display: flex;
+	align-items: center;
+	padding: 2px 0;
+}
+
 .header-icon-wrapper-improved {
-	background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+	background: linear-gradient(135deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%);
 	border-radius: 14px;
 	padding: 10px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+	box-shadow: var(--pos-glow, 0 2px 8px rgba(48, 79, 243, 0.3));
 }
 
 .header-icon {
@@ -215,7 +225,8 @@ export default {
 .header-title-improved {
 	margin: 0 0 4px 0;
 	font-weight: 600;
-	color: #1a1a1a;
+	font-family: var(--pos-font-display, "Space Grotesk", sans-serif);
+	color: var(--pos-text-primary, #0b0e14);
 	font-size: 1.25rem;
 	line-height: 1.2;
 }
@@ -293,13 +304,13 @@ export default {
 
 .app-item-improved:hover {
 	background: #e3f2fd;
-	border-color: #1976d2;
+	border-color: var(--pos-primary, #304FF3);
 	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+	box-shadow: 0 2px 8px rgba(48, 79, 243, 0.15);
 }
 
 .app-icon-improved {
-	background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+	background: linear-gradient(135deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%);
 	border-radius: 8px;
 	padding: 8px;
 	display: flex;

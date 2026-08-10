@@ -1,10 +1,10 @@
 {
-  "name": "POS Awesome",
-  "short_name": "POS",
+  "name": "NMG POS",
+  "short_name": "NMG POS",
   "start_url": "/app/posapp",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#0097A7",
+  "theme_color": "#304FF3",
   "icons": [
     {
       "src": "/assets/posawesome/icons/logo-512.png",

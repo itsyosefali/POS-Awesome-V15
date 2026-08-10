@@ -7,7 +7,13 @@ import json
 import frappe
 from frappe.utils import cint, nowdate
 from frappe import _
-from .utilities import get_version
+
+
+def _payment_method_table():
+	"""Child table used by POS Profile payment methods (ERPNext version aware)."""
+	from .utilities import get_version
+
+	return "POS Payment Method" if get_version() == 13 else "Sales Invoice Payment"
 
 
 @frappe.whitelist()
@@ -40,7 +46,7 @@ def get_opening_dialog_data():
     for i in data["pos_profiles_data"]:
         pos_profiles_list.append(i.name)
 
-    payment_method_table = "POS Payment Method" if get_version() == 13 else "Sales Invoice Payment"
+    payment_method_table = _payment_method_table()
     data["payments_method"] = frappe.get_list(
         payment_method_table,
         filters={"parent": ["in", pos_profiles_list]},

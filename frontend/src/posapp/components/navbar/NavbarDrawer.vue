@@ -11,15 +11,10 @@
 		:scrim="scrimColor"
 	>
 		<div v-if="!mini" class="drawer-header">
-			<v-avatar size="40">
-				<v-img :src="companyImg" alt="Company logo" />
-			</v-avatar>
-			<span class="drawer-company">{{ company }}</span>
+			<NmgLogo size="md" show-label :label="companyLabel" />
 		</div>
 		<div v-else class="drawer-header-mini">
-			<v-avatar size="40">
-				<v-img :src="companyImg" alt="Company logo" />
-			</v-avatar>
+			<NmgLogo size="sm" />
 		</div>
 
 		<v-divider />
@@ -47,9 +42,13 @@
 
 <script>
 import { useRtl } from "../../composables/useRtl.js";
+import NmgLogo from "../brand/NmgLogo.vue";
 
 export default {
 	name: "NavbarDrawer",
+	components: {
+		NmgLogo,
+	},
 	setup() {
 		const { isRtl, rtlStyles, rtlClasses } = useRtl();
 		return {
@@ -75,6 +74,10 @@ export default {
 		};
 	},
 	computed: {
+		companyLabel() {
+			const name = (this.company || "NMG POS").replace(/^NMG\s*/i, "").trim();
+			return name || "POS";
+		},
 		scrimColor() {
 			// Use an opaque background in light mode so that
 			// underlying content doesn't show through the drawer
@@ -148,8 +151,8 @@ export default {
 	justify-content: center;
 	align-items: center;
 	height: 64px;
-	background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
-	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+	background: linear-gradient(135deg, var(--pos-bg-secondary, #f5f6fa) 0%, var(--pos-primary-container, #e8ecff) 100%);
+	border-bottom: 1px solid var(--pos-border, rgba(0, 0, 0, 0.1));
 }
 
 /* Styling for the company name text within the drawer header */
@@ -158,8 +161,8 @@ export default {
 	flex: 1;
 	font-weight: 500;
 	font-size: 1rem;
-	color: #0097a7;
-	font-family: "Roboto", sans-serif;
+	color: var(--pos-primary, #304FF3);
+	font-family: var(--pos-font-body, "Inter", sans-serif);
 }
 
 /* Styling for icons within the navigation drawer list items */
@@ -174,18 +177,18 @@ export default {
 	font-weight: 500;
 	font-size: 0.95rem;
 	color: var(--pos-text-primary) !important;
-	font-family: "Roboto", sans-serif;
+	font-family: var(--pos-font-body, "Inter", sans-serif);
 }
 
 /* Hover effect for all list items in the navigation drawer */
 .v-list-item:hover {
-	background-color: rgba(25, 118, 210, 0.08) !important;
+	background-color: rgba(48, 79, 243, 0.08) !important;
 }
 
 /* Styling for the actively selected list item in the navigation drawer */
 .active-item {
-	background-color: rgba(25, 118, 210, 0.12) !important;
-	border-right: 3px solid #1976d2;
+	background-color: rgba(48, 79, 243, 0.12) !important;
+	border-right: 3px solid var(--pos-primary, #304FF3);
 }
 
 /* Theme-aware drawer styling */
@@ -205,7 +208,7 @@ export default {
 	color: var(--pos-text-primary) !important;
 	font-weight: 500;
 	font-size: 0.95rem;
-	font-family: "Roboto", sans-serif;
+	font-family: var(--pos-font-body, "Inter", sans-serif);
 }
 
 :deep([data-theme="dark"]) .drawer-company,
@@ -213,7 +216,7 @@ export default {
 	color: var(--text-primary, #ffffff) !important;
 	font-weight: 500;
 	font-size: 1rem;
-	font-family: "Roboto", sans-serif;
+	font-family: var(--pos-font-body, "Inter", sans-serif);
 }
 
 :deep([data-theme="dark"]) .drawer-icon,
@@ -230,7 +233,7 @@ export default {
 :deep([data-theme="dark"]) .active-item,
 :deep(.v-theme--dark) .active-item {
 	background-color: rgba(144, 202, 249, 0.12) !important;
-	border-right: 3px solid #90caf9;
+	border-right: 3px solid #A8B5FA;
 }
 
 :deep([data-theme="dark"]) .v-divider,

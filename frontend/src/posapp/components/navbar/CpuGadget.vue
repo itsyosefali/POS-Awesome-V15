@@ -64,7 +64,7 @@
 								class="cpu-bar-fill"
 								:style="{
 									width: (serverMemory || 0) + '%',
-									background: 'linear-gradient(90deg,#1976d2 0%,#42a5f5 100%)',
+									background: 'linear-gradient(90deg,#304FF3 0%,#5B73F5 100%)',
 								}"
 							></div>
 						</div>
@@ -251,13 +251,13 @@ const peakPercent = computed(() => Math.round(Math.min(peakLag.value, 100)));
 }
 .cpu-bar-fill {
 	height: 100%;
-	background: linear-gradient(90deg, #7b1fa2 0%, #42a5f5 100%);
+	background: linear-gradient(90deg, #304FF3 0%, #5B73F5 100%);
 	border-radius: 4px;
 	transition: width 0.3s;
 }
 .cpu-bar-label {
 	font-size: 11px;
-	color: #7b1fa2;
+	color: #304FF3;
 	font-weight: 600;
 }
 .cpu-tooltip-warning {
@@ -268,7 +268,7 @@ const peakPercent = computed(() => Math.round(Math.min(peakLag.value, 100)));
 	margin-bottom: 4px;
 }
 .cpu-tooltip-tip {
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-size: 12px;
 	display: flex;
 	align-items: center;
@@ -324,7 +324,7 @@ const peakPercent = computed(() => Math.round(Math.min(peakLag.value, 100)));
 	background: #4caf50;
 }
 .legend-dot.server {
-	background: #1976d2;
+	background: var(--pos-primary, #304FF3);
 }
 
 /* Fix tooltip background and text color in light mode */
@@ -332,8 +332,8 @@ const peakPercent = computed(() => Math.round(Math.min(peakLag.value, 100)));
 :deep(.v-overlay__content) {
 	background: #e3f2fd !important;
 	color: #1a237e !important;
-	box-shadow: 0 4px 16px rgba(25, 118, 210, 0.1) !important;
-	border: 1px solid #90caf9 !important;
+	box-shadow: 0 4px 16px rgba(48, 79, 243, 0.1) !important;
+	border: 1px solid #A8B5FA !important;
 }
 
 .cpu-tooltip-title,
@@ -347,7 +347,7 @@ const peakPercent = computed(() => Math.round(Math.min(peakLag.value, 100)));
 :deep(.v-theme--dark) .v-overlay__content {
 	background: #26344d !important;
 	color: #fff !important;
-	border: 1px solid #1976d2 !important;
+	border: 1px solid var(--pos-primary, #304FF3) !important;
 }
 
 :deep([data-theme="dark"]) .cpu-tooltip-title,

@@ -188,15 +188,15 @@ export default {
 }
 
 .status-btn-enhanced {
-	background: rgba(25, 118, 210, 0.1) !important;
-	border: 1px solid rgba(25, 118, 210, 0.3);
+	background: rgba(48, 79, 243, 0.1) !important;
+	border: 1px solid rgba(48, 79, 243, 0.3);
 	transition: all 0.3s ease;
 	padding: 4px;
 	/* Reduced padding */
 }
 
 .status-btn-enhanced:hover {
-	background: rgba(25, 118, 210, 0.2) !important;
+	background: rgba(48, 79, 243, 0.2) !important;
 	transform: scale(1.05);
 }
 

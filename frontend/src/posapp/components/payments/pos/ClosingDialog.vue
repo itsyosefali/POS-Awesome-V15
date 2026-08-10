@@ -235,9 +235,13 @@ export default {
 	justify-content: center;
 	width: 64px;
 	height: 64px;
-	background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+	background: linear-gradient(
+		135deg,
+		var(--pos-primary, #304ff3) 0%,
+		var(--pos-primary-variant, #1a2d8f) 100%
+	);
 	border-radius: 16px;
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+	box-shadow: var(--pos-glow, 0 4px 12px rgba(48, 79, 243, 0.3));
 }
 
 .header-icon {
@@ -251,14 +255,15 @@ export default {
 .header-title {
 	font-size: 1.5rem;
 	font-weight: 600;
-	color: #1a1a1a;
+	font-family: var(--pos-font-display, "Space Grotesk", sans-serif);
+	color: var(--pos-text-primary, #0b0e14);
 	margin: 0 0 4px 0;
 	line-height: 1.2;
 }
 
 .header-subtitle {
 	font-size: 0.95rem;
-	color: #666;
+	color: var(--pos-text-secondary, #5a5f6e);
 	margin: 0;
 	font-weight: 400;
 }

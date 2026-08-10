@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"cJigdSD9mh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">POS Awesome</span>\",\"col\":12}},{\"id\":\"4D2sc3CbN3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"POS Awesome App\",\"col\":3}},{\"id\":\"nVBkn7nfDw\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"-B_qEZqEA6\",\"type\":\"card\",\"data\":{\"card_name\":\"POS\",\"col\":4}},{\"id\":\"tsAHaUCd5l\",\"type\":\"card\",\"data\":{\"card_name\":\"Profile\",\"col\":4}},{\"id\":\"2-3HMkGou3\",\"type\":\"card\",\"data\":{\"card_name\":\"Shift\",\"col\":4}},{\"id\":\"GdPtnrazDS\",\"type\":\"card\",\"data\":{\"card_name\":\"Delivery Charges\",\"col\":4}},{\"id\":\"cABO53xhGv\",\"type\":\"card\",\"data\":{\"card_name\":\"Offers &amp; Coupons\",\"col\":4}}]",
+ "content": "[{\"id\":\"cJigdSD9mh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">NMG POS</span>\",\"col\":12}},{\"id\":\"4D2sc3CbN3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"NMG POS App\",\"col\":3}},{\"id\":\"nVBkn7nfDw\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"-B_qEZqEA6\",\"type\":\"card\",\"data\":{\"card_name\":\"POS\",\"col\":4}},{\"id\":\"tsAHaUCd5l\",\"type\":\"card\",\"data\":{\"card_name\":\"Profile\",\"col\":4}},{\"id\":\"2-3HMkGou3\",\"type\":\"card\",\"data\":{\"card_name\":\"Shift\",\"col\":4}},{\"id\":\"GdPtnrazDS\",\"type\":\"card\",\"data\":{\"card_name\":\"Delivery Charges\",\"col\":4}},{\"id\":\"cABO53xhGv\",\"type\":\"card\",\"data\":{\"card_name\":\"Offers &amp; Coupons\",\"col\":4}}]",
  "creation": "2022-11-29 14:33:45.038200",
  "custom_blocks": [],
  "docstatus": 0,
@@ -10,12 +10,12 @@
  "icon": "retail",
  "idx": 0,
  "is_hidden": 0,
- "label": "POS Awesome",
+ "label": "NMG POS",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "POS Awesome",
+   "label": "NMG POS",
    "link_count": 0,
    "link_to": "posapp",
    "link_type": "Page",
@@ -117,7 +117,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "POS Awesome App",
+   "label": "NMG POS App",
    "link_count": 0,
    "link_to": "posapp",
    "link_type": "Page",
@@ -156,7 +156,7 @@
  "modified": "2023-06-07 17:35:14.887611",
  "modified_by": "Administrator",
  "module": "POSAwesome",
- "name": "POS Awesome",
+ "name": "NMG POS",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -168,10 +168,10 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "POS Awesome App",
+   "label": "NMG POS App",
    "link_to": "posapp",
    "type": "Page"
   }
  ],
- "title": "POS Awesome"
+ "title": "NMG POS"
 }

@@ -603,12 +603,12 @@ export default {
 	letter-spacing: 0.5px;
 	box-shadow: none;
 	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-	background: rgba(25, 118, 210, 0.08) !important;
-	border: 1px solid rgba(25, 118, 210, 0.12);
+	background: rgba(48, 79, 243, 0.08) !important;
+	border: 1px solid rgba(48, 79, 243, 0.12);
 	backdrop-filter: blur(8px);
 	min-width: 90px;
 	height: 36px;
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 }
 
 /* Mobile Menu Button Styles */
@@ -620,13 +620,13 @@ export default {
 	max-width: 36px !important;
 	width: 36px !important;
 	height: 36px !important;
-	background: rgba(25, 118, 210, 0.08) !important;
-	border: 1px solid rgba(25, 118, 210, 0.12) !important;
+	background: rgba(48, 79, 243, 0.08) !important;
+	border: 1px solid rgba(48, 79, 243, 0.12) !important;
 }
 
 .mobile-menu-btn:hover {
-	background: rgba(25, 118, 210, 0.12) !important;
-	border-color: rgba(25, 118, 210, 0.2) !important;
+	background: rgba(48, 79, 243, 0.12) !important;
+	border-color: rgba(48, 79, 243, 0.2) !important;
 	transform: translateY(-1px);
 }
 
@@ -637,27 +637,27 @@ export default {
 
 /* Elite menu button text and icon colors */
 .menu-btn-compact .v-btn__content {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 	font-weight: 500;
 }
 
 .menu-btn-compact .pos-text-primary,
 .menu-btn-compact .v-icon {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 	transition: color 0.25s ease;
 }
 
 .menu-btn-compact:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
-	background: rgba(25, 118, 210, 0.12) !important;
-	border-color: rgba(25, 118, 210, 0.2);
+	box-shadow: 0 4px 12px rgba(48, 79, 243, 0.15);
+	background: rgba(48, 79, 243, 0.12) !important;
+	border-color: rgba(48, 79, 243, 0.2);
 }
 
 .menu-btn-compact:hover .v-btn__content,
 .menu-btn-compact:hover .pos-text-primary,
 .menu-btn-compact:hover .v-icon {
-	color: #1565c0 !important;
+	color: var(--pos-primary-variant, #1A2D8F) !important;
 }
 
 /* Elite Menu Card - Glass Morphism Design */
@@ -684,13 +684,13 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	border-bottom: 1px solid rgba(25, 118, 210, 0.08);
+	border-bottom: 1px solid rgba(48, 79, 243, 0.08);
 }
 
 .menu-header-text-compact {
 	font-size: 14px;
 	font-weight: 500;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	letter-spacing: 0.5px;
 	opacity: 0.9;
 }
@@ -730,7 +730,7 @@ export default {
 }
 
 .menu-item-compact:hover::before {
-	background: linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(66, 165, 245, 0.08) 100%);
+	background: linear-gradient(135deg, rgba(48, 79, 243, 0.05) 0%, rgba(66, 165, 245, 0.08) 100%);
 }
 
 .menu-item-compact:hover {
@@ -764,12 +764,12 @@ export default {
 
 /* Compact Icon Colors */
 .primary-icon {
-	background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
-	box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
+	background: linear-gradient(135deg, var(--pos-primary, #304FF3) 0%, #5B73F5 100%);
+	box-shadow: 0 2px 6px rgba(48, 79, 243, 0.2);
 }
 
 .secondary-icon {
-	background: linear-gradient(135deg, #7b1fa2 0%, #ba68c8 100%);
+	background: linear-gradient(135deg, #304FF3 0%, #5B73F5 100%);
 	box-shadow: 0 2px 6px rgba(123, 31, 162, 0.2);
 }
 
@@ -813,13 +813,13 @@ export default {
 .menu-section-divider-compact {
 	margin: 8px 10px;
 	opacity: 0.12;
-	border-color: #1976d2;
+	border-color: var(--pos-primary, #304FF3);
 }
 
 /* Compact Hover Effects */
 .primary-action:hover .primary-icon {
 	transform: scale(1.1) rotate(5deg);
-	box-shadow: 0 3px 8px rgba(25, 118, 210, 0.25);
+	box-shadow: 0 3px 8px rgba(48, 79, 243, 0.25);
 }
 
 .secondary-action:hover .secondary-icon {
@@ -928,24 +928,24 @@ export default {
 
 /* Compact Focus States */
 .menu-item-compact:focus-visible {
-	outline: 1px solid #1976d2;
+	outline: 1px solid var(--pos-primary, #304FF3);
 	outline-offset: 1px;
 }
 
 .menu-btn-compact:focus-visible {
-	outline: 1px solid #1976d2;
+	outline: 1px solid var(--pos-primary, #304FF3);
 	outline-offset: 2px;
 }
 
 /* Dark Theme Adjustments */
 /* Theme-aware compact menu styling */
 .menu-btn-compact {
-	background: linear-gradient(135deg, #90caf9 0%, #42a5f5 100%);
+	background: linear-gradient(135deg, #A8B5FA 0%, #5B73F5 100%);
 	color: var(--pos-text-primary) !important;
 }
 
 .menu-btn-compact:hover {
-	background: linear-gradient(135deg, #64b5f6 0%, #1976d2 100%);
+	background: linear-gradient(135deg, #7B8FF7 0%, var(--pos-primary, #304FF3) 100%);
 	box-shadow: 0 4px 12px rgba(144, 202, 249, 0.3);
 }
 
@@ -994,13 +994,13 @@ export default {
 /* Dark mode icon adjustments */
 :deep([data-theme="dark"]) .primary-icon,
 :deep(.v-theme--dark) .primary-icon {
-	background: linear-gradient(135deg, #90caf9 0%, #42a5f5 100%);
+	background: linear-gradient(135deg, #A8B5FA 0%, #5B73F5 100%);
 	box-shadow: 0 2px 6px rgba(144, 202, 249, 0.3);
 }
 
 :deep([data-theme="dark"]) .secondary-icon,
 :deep(.v-theme--dark) .secondary-icon {
-	background: linear-gradient(135deg, #ce93d8 0%, #ba68c8 100%);
+	background: linear-gradient(135deg, #ce93d8 0%, #5B73F5 100%);
 	box-shadow: 0 2px 6px rgba(206, 147, 216, 0.3);
 }
 

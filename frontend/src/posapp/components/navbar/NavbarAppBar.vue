@@ -21,33 +21,17 @@
 				:class="['pos-text-primary nav-icon', isRtl ? 'rtl-nav-icon' : 'ltr-nav-icon']"
 			/>
 
-			<v-img
-				:src="posLogo"
-				alt="IBS POS"
-				:max-width="isMobile ? 24 : 32"
-				:class="['pos-navbar-logo', isRtl ? 'rtl-logo' : 'ltr-logo']"
-				loading="lazy"
-			/>
-
-			<v-toolbar-title
+			<div
 				@click="$emit('go-desk')"
 				@keydown.enter="$emit('go-desk')"
-				:class="[
-					'text-h6 font-weight-bold text-primary pos-navbar-title',
-					isRtl ? 'rtl-title' : 'ltr-title',
-				]"
-				style="cursor: pointer; text-decoration: none"
+				:class="['pos-navbar-brand-mark', isRtl ? 'rtl-title' : 'ltr-title']"
+				style="cursor: pointer"
 				tabindex="0"
 				:aria-label="__('Go to Frappe Desk')"
 				role="button"
 			>
-				<template v-if="isMobile">
-					<span class="pos-navbar-title-compact">{{ __("IBS POS") }}</span>
-				</template>
-				<template v-else>
-					<span class="pos-navbar-title-bold">{{ __("IBS POS") }}</span>
-				</template>
-			</v-toolbar-title>
+				<NmgLogo :size="isMobile ? 'sm' : 'md'" show-label :label="__('POS')" />
+			</div>
 		</div>
 
 		<v-spacer />
@@ -182,17 +166,19 @@
 
 <script>
 import { useRtl } from "../../composables/useRtl.js";
-import posLogo from "../payments/pos/pos.png";
+import NmgLogo from "../brand/NmgLogo.vue";
 
 export default {
 	name: "NavbarAppBar",
+	components: {
+		NmgLogo,
+	},
 	setup() {
 		const { isRtl, rtlStyles, rtlClasses } = useRtl();
 		return {
 			isRtl,
 			rtlStyles,
 			rtlClasses,
-			posLogo,
 		};
 	},
 	data() {
@@ -355,6 +341,20 @@ export default {
 	/* Default to normal row */
 	flex-shrink: 0;
 	min-width: max-content;
+}
+
+.pos-navbar-brand-mark {
+	display: flex;
+	align-items: center;
+	outline: none;
+	border-radius: 8px;
+	padding: 2px 6px;
+	transition: background-color 0.15s ease;
+}
+
+.pos-navbar-brand-mark:hover,
+.pos-navbar-brand-mark:focus-visible {
+	background: var(--pos-hover-bg, rgba(48, 79, 243, 0.06));
 }
 
 .pos-navbar-title-compact {
@@ -525,7 +525,7 @@ export default {
 	min-width: max-content;
 	flex-shrink: 0;
 	/* Use same blue as Menu button - matching gradient blue */
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 }
 
 .pos-navbar-title:hover {
@@ -581,18 +581,18 @@ export default {
 	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	min-width: 40px;
 	min-height: 40px;
-	color: #1976d2 !important;
-	background: rgba(25, 118, 210, 0.08) !important;
-	border: 1px solid rgba(25, 118, 210, 0.12);
+	color: var(--pos-primary, #304FF3) !important;
+	background: rgba(48, 79, 243, 0.08) !important;
+	border: 1px solid rgba(48, 79, 243, 0.12);
 	backdrop-filter: blur(8px);
 }
 
 .nav-icon:hover {
-	background: rgba(25, 118, 210, 0.12) !important;
-	color: #1565c0 !important;
-	border-color: rgba(25, 118, 210, 0.2);
+	background: rgba(48, 79, 243, 0.12) !important;
+	color: var(--pos-primary-variant, #1A2D8F) !important;
+	border-color: rgba(48, 79, 243, 0.2);
 	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+	box-shadow: 0 4px 12px rgba(48, 79, 243, 0.15);
 }
 
 .rtl-nav-icon {
@@ -644,9 +644,9 @@ export default {
 }
 
 .profile-chip {
-	color: #1976d2 !important;
-	border-color: rgba(25, 118, 210, 0.2) !important;
-	background: rgba(25, 118, 210, 0.06) !important;
+	color: var(--pos-primary, #304FF3) !important;
+	border-color: rgba(48, 79, 243, 0.2) !important;
+	background: rgba(48, 79, 243, 0.06) !important;
 	backdrop-filter: blur(8px);
 }
 
@@ -670,9 +670,9 @@ export default {
 
 .profile-chip:hover {
 	transform: translateY(-1px);
-	background: rgba(25, 118, 210, 0.1) !important;
-	border-color: rgba(25, 118, 210, 0.25) !important;
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
+	background: rgba(48, 79, 243, 0.1) !important;
+	border-color: rgba(48, 79, 243, 0.25) !important;
+	box-shadow: 0 4px 12px rgba(48, 79, 243, 0.12);
 }
 
 /* RTL Profile Chip Styling */
@@ -743,26 +743,26 @@ export default {
 	padding: 4px;
 	min-width: 40px;
 	min-height: 40px;
-	background: rgba(25, 118, 210, 0.08) !important;
-	border: 1px solid rgba(25, 118, 210, 0.12);
+	background: rgba(48, 79, 243, 0.08) !important;
+	border: 1px solid rgba(48, 79, 243, 0.12);
 	border-radius: 12px;
 	backdrop-filter: blur(8px);
 }
 
 .offline-invoices-btn .pos-text-primary {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 }
 
 /* Elite styling for navbar text and icons */
 .pos-navbar-enhanced .pos-text-primary {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 }
 
 /* Ensure profile text and icons use elite colors */
 .profile-chip .pos-text-primary,
 .profile-chip .ltr-profile-text,
 .profile-chip .rtl-profile-text {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 	font-weight: 500;
 }
 
@@ -770,12 +770,12 @@ export default {
 .pos-navbar-enhanced .v-icon.pos-text-primary,
 .pos-navbar-enhanced .mdi-menu-down,
 .pos-navbar-enhanced .v-icon--end.pos-text-primary {
-	color: #1976d2 !important;
+	color: var(--pos-primary, #304FF3) !important;
 	transition: color 0.25s ease;
 }
 
 .pos-navbar-enhanced .v-icon.pos-text-primary:hover {
-	color: #1565c0 !important;
+	color: var(--pos-primary-variant, #1A2D8F) !important;
 }
 
 .rtl-offline-btn {
@@ -790,13 +790,13 @@ export default {
 
 .offline-invoices-btn:hover {
 	transform: translateY(-1px);
-	background: rgba(25, 118, 210, 0.12) !important;
-	border-color: rgba(25, 118, 210, 0.2);
-	box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+	background: rgba(48, 79, 243, 0.12) !important;
+	border-color: rgba(48, 79, 243, 0.2);
+	box-shadow: 0 4px 12px rgba(48, 79, 243, 0.15);
 }
 
 .offline-invoices-btn:hover .pos-text-primary {
-	color: #1565c0 !important;
+	color: var(--pos-primary-variant, #1A2D8F) !important;
 }
 
 .offline-invoices-btn.has-pending {
@@ -1003,7 +1003,7 @@ export default {
 	.mobile-btn {
 		min-width: 44px !important;
 		min-height: 44px !important;
-		-webkit-tap-highlight-color: rgba(25, 118, 210, 0.1);
+		-webkit-tap-highlight-color: rgba(48, 79, 243, 0.1);
 	}
 
 	.pos-navbar-title {

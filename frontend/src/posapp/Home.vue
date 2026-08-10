@@ -567,6 +567,9 @@ export default {
 	height: 100dvh;
 	max-height: 100dvh;
 	overflow: hidden;
+	font-family: var(--pos-font-body, "Inter", sans-serif);
+	background: var(--pos-bg-primary, #ffffff);
+	color: var(--pos-text-primary, #0b0e14);
 }
 
 .main-content {

@@ -5,8 +5,8 @@
 				<!-- Header Section - White Background with Blue Text -->
 				<v-card-title class="opening-dialog-header">
 					<div class="header-content">
-						<div class="header-icon-wrapper">
-							<v-icon class="header-icon">mdi-cash-plus</v-icon>
+						<div class="header-brand">
+							<NmgLogo size="md" show-label label="POS" />
 						</div>
 						<div class="header-text">
 							<h5 class="header-title">{{ __("Create POS Opening Shift") }}</h5>
@@ -134,6 +134,7 @@
 
 <script>
 import format from "../../../format";
+import NmgLogo from "../../brand/NmgLogo.vue";
 import {
 	getOpeningDialogStorage,
 	setOpeningDialogStorage,
@@ -144,6 +145,9 @@ import {
 
 export default {
 	mixins: [format],
+	components: {
+		NmgLogo,
+	},
 	props: ["dialog"],
 
 	data() {
@@ -315,31 +319,54 @@ export default {
 .opening-dialog-card {
 	border-radius: 16px;
 	overflow: hidden;
-	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-	border: 1px solid rgba(25, 118, 210, 0.1);
+	background: var(--pos-card-bg, #ffffff);
+	border: 1px solid color-mix(in srgb, var(--pos-primary, #304FF3) 15%, transparent);
+	box-shadow: 0 8px 32px var(--pos-shadow, rgba(48, 79, 243, 0.08));
 	transition: all 0.3s ease;
 	max-height: 90vh;
 	display: flex;
 	flex-direction: column;
 }
 
-/* Header Section - White Background with Blue Text */
+/* Header Section - NMG branded */
 .opening-dialog-header {
-	background: white;
-	color: #1976d2;
+	background: var(--pos-surface, #ffffff);
+	color: var(--pos-primary, #304FF3);
 	padding: 16px 24px;
-	border-bottom: 2px solid rgba(25, 118, 210, 0.1);
+	border-bottom: 1px solid color-mix(in srgb, var(--pos-primary, #304FF3) 15%, transparent);
 	flex-shrink: 0;
+	position: relative;
+}
+
+.opening-dialog-header::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(
+		90deg,
+		var(--pos-primary, #304FF3) 0%,
+		#5b73f5 50%,
+		var(--pos-secondary, #00f0ff) 100%
+	);
 }
 
 .header-content {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 14px;
+}
+
+.header-brand {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
 }
 
 .header-icon-wrapper {
-	background: rgba(25, 118, 210, 0.1);
+	background: color-mix(in srgb, var(--pos-primary, #304FF3) 12%, transparent);
 	border-radius: 50%;
 	padding: 8px;
 	display: flex;
@@ -350,7 +377,7 @@ export default {
 
 .header-icon {
 	font-size: 20px;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 }
 
 .header-text {
@@ -358,25 +385,26 @@ export default {
 }
 
 .header-title {
-	font-size: 1.3rem;
+	font-size: 1.25rem;
 	font-weight: 600;
+	font-family: var(--pos-font-display, "Space Grotesk", sans-serif);
 	margin: 0;
 	line-height: 1.2;
-	color: #1976d2;
+	color: var(--pos-text-primary, #0b0e14);
 }
 
 .header-subtitle {
 	font-size: 0.85rem;
-	opacity: 0.8;
+	opacity: 0.85;
 	margin: 2px 0 0 0;
 	line-height: 1.3;
-	color: #1976d2;
+	color: var(--pos-text-secondary, #5a5f6e);
 }
 
 /* Content Section - Optimized for minimal scrolling */
 .opening-dialog-content {
 	padding: 20px 24px;
-	background: white;
+	background: var(--pos-surface, #ffffff);
 	flex: 1;
 	overflow-y: auto;
 }
@@ -391,12 +419,13 @@ export default {
 	gap: 6px;
 	font-size: 1rem;
 	font-weight: 600;
-	color: #1976d2;
+	font-family: var(--pos-font-display, "Space Grotesk", sans-serif);
+	color: var(--pos-primary, #304FF3);
 	margin-bottom: 0;
 }
 
 .section-icon {
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-size: 18px;
 }
 
@@ -414,7 +443,7 @@ export default {
 }
 
 .field-focused {
-	background: rgba(25, 118, 210, 0.02);
+	background: color-mix(in srgb, var(--pos-primary, #304FF3) 4%, transparent);
 	border-radius: 8px;
 }
 
@@ -422,8 +451,8 @@ export default {
 .enhanced-table-compact {
 	border-radius: 8px;
 	overflow: hidden;
-	box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
-	border: 1px solid rgba(25, 118, 210, 0.1);
+	box-shadow: 0 1px 8px var(--pos-shadow, rgba(0, 0, 0, 0.06));
+	border: 1px solid color-mix(in srgb, var(--pos-primary, #304FF3) 12%, transparent);
 }
 
 .enhanced-table-compact :deep(.v-data-table__wrapper) {
@@ -431,10 +460,10 @@ export default {
 }
 
 .enhanced-table-compact :deep(th) {
-	background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
-	color: #1976d2;
+	background: var(--pos-table-header-bg, #f0f1f5);
+	color: var(--pos-primary, #304FF3);
 	font-weight: 600;
-	border-bottom: 1px solid rgba(25, 118, 210, 0.1);
+	border-bottom: 1px solid color-mix(in srgb, var(--pos-primary, #304FF3) 12%, transparent);
 	padding: 8px 12px;
 }
 
@@ -443,7 +472,7 @@ export default {
 }
 
 .enhanced-table-compact :deep(tr:hover) {
-	background: rgba(25, 118, 210, 0.04);
+	background: var(--pos-table-row-hover, rgba(48, 79, 243, 0.04));
 }
 
 /* Amount Editor - Compact */
@@ -455,10 +484,9 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	/* Add this to center the content horizontally */
 	gap: 4px;
 	padding: 4px 8px;
-	background: rgba(25, 118, 210, 0.05);
+	background: color-mix(in srgb, var(--pos-primary, #304FF3) 6%, transparent);
 	border-radius: 6px;
 	transition: all 0.3s ease;
 	cursor: pointer;
@@ -466,19 +494,19 @@ export default {
 }
 
 .amount-display-compact:hover {
-	background: rgba(25, 118, 210, 0.1);
+	background: color-mix(in srgb, var(--pos-primary, #304FF3) 12%, transparent);
 	transform: scale(1.01);
 }
 
 .currency-symbol {
 	font-weight: 600;
-	color: #1976d2;
+	color: var(--pos-primary, #304FF3);
 	font-size: 0.9rem;
 }
 
 .amount-value {
 	font-weight: 500;
-	color: #333;
+	color: var(--pos-text-primary, #333);
 	font-size: 0.9rem;
 }
 
@@ -622,27 +650,26 @@ export default {
 
 /* Focus and Interaction States */
 .enhanced-field :deep(.v-field--focused) {
-	box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+	box-shadow: 0 0 0 2px rgba(48, 79, 243, 0.1);
 }
 
 .enhanced-table-compact :deep(.v-data-table-row--clickable:hover) {
-	background: rgba(25, 118, 210, 0.04) !important;
+	background: var(--pos-table-row-hover, rgba(48, 79, 243, 0.04)) !important;
 }
 
-/* Enhanced focus states for form fields */
 .enhanced-field :deep(.v-field--focused .v-field__outline) {
-	border-color: rgba(25, 118, 210, 0.3) !important;
+	border-color: color-mix(in srgb, var(--pos-primary, #304FF3) 40%, transparent) !important;
 	border-width: 1px !important;
 }
 
 .enhanced-field :deep(.v-field--focused .v-field__overlay) {
-	background: rgba(25, 118, 210, 0.02);
+	background: color-mix(in srgb, var(--pos-primary, #304FF3) 4%, transparent);
 }
 
-/* Action buttons with improved naming and styling */
+/* Action buttons */
 .dialog-actions-container {
-	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-	border-top: 1px solid #e0e0e0;
+	background: var(--pos-bg-secondary, #f5f6fa);
+	border-top: 1px solid var(--pos-border, #e0e0e0);
 	padding: 16px 24px;
 	gap: 12px;
 }
@@ -654,7 +681,7 @@ export default {
 	padding: 12px 32px;
 	min-width: 120px;
 	transition: all 0.3s ease;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px var(--pos-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .pos-action-btn,
@@ -665,25 +692,30 @@ export default {
 }
 
 .cancel-action-btn {
-        background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%) !important;
+	background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%) !important;
 }
 
 .cancel-action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
 }
 
 .logout-action-btn {
-        background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%) !important;
+	background: linear-gradient(
+		135deg,
+		var(--pos-primary, #304ff3) 0%,
+		var(--pos-primary-variant, #1a2d8f) 100%
+	) !important;
+	box-shadow: var(--pos-glow, 0 0 12px rgba(48, 79, 243, 0.25));
 }
 
 .logout-action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(21, 101, 192, 0.4);
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(48, 79, 243, 0.4);
 }
 
 .submit-action-btn {
-        background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%) !important;
+	background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%) !important;
 }
 
 .submit-action-btn:hover {

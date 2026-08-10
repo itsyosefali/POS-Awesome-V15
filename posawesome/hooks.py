@@ -1,9 +1,9 @@
 from posawesome.utils import get_build_version
 
 app_name = "posawesome"
-app_title = "POS Awesome"
+app_title = "NMG POS"
 app_publisher = "Youssef Restom"
-app_description = "POS Awesome"
+app_description = "NMG point of sale"
 app_icon = "octicon octicon-file-directory"
 app_color = "grey"
 app_email = "youssef@totrox.com"
